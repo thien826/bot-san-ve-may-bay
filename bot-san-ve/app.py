@@ -63,25 +63,24 @@ def add_log(message: str, log_type: str = "info"):
     logger.info(f"[{log_type.upper()}] {message}")
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG CHUẨN
+#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG CHUẨN FIX LỖI 404
 # ═════════════════════════════════════════════════════════════
 def generate_flight_link(origin: str, destination: str, date_str: str) -> str:
     """
     Hàm tự động tính toán cấu trúc URL chuẩn để nhảy thẳng vào trang đặt vé
+    đã được fix lỗi 404
     """
     try:
+        # Định dạng date chuẩn DD-MM-YYYY cho URL Traveloka
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        date_traveloka = date_obj.strftime("%d-%m-%Y")
         
-        # [MẶC ĐỊNH] Cấu trúc link tìm kiếm Google Flights chuẩn không bị nhận nhầm địa danh
-        link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}%20oneway"
-        
-        # [TÙY CHỌN] Nếu bạn muốn đổi sang Traveloka, hãy xóa dấu '#' ở dòng dưới và thêm '#' vào dòng Google Flights phía trên
-        # date_traveloka = date_obj.strftime("%d-%m-%Y")
-        # link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
+        # Link tìm kiếm vé 1 chiều đến trang Traveloka VN chuẩn (Fix lỗi link sai cấu trúc)
+        link = f"https://www.traveloka.com/vi-vn/v2/flight/search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
         
         return link
     except Exception:
-        return "https://www.google.com/travel/flights"
+        return "https://www.traveloka.com/vi-vn/flight"
 
 # ═════════════════════════════════════════════════════════════
 #  HÀM CÀO DỮ LIỆU GIÁ VÉ THẬT (WEB SCRAPING)
@@ -153,130 +152,4 @@ def send_telegram(text: str) -> bool:
 #  BỘ LỊCH CHẠY NGẦM QUÉT VÉ LIÊN TỤC (APSCHEDULER)
 # ═════════════════════════════════════════════════════════════
 def scan_job():
-    if not state["config"]["is_active"]:
-        return
-
-    cfg = state["config"]
-    add_log(f"🔍 Hệ thống kích hoạt lệnh quét tự động chặng: {cfg['origin']} ➔ {cfg['destination']} ({cfg['fly_date']})", "info")
-    
-    try:
-        flights = fetch_real_flight_prices(cfg["origin"], cfg["destination"], cfg["fly_date"])
-        state["results"] = flights
-        state["last_scan"] = datetime.now().strftime("%H:%M:%S %d/%m")
-        
-        if not flights:
-            add_log("Không quét được chuyến bay nào phù hợp.", "warning")
-            return
-            
-        cheapest = flights[0]
-        price_text = f"{cheapest['price']:,} ₫"
-        add_log(f"Vé rẻ nhất tìm thấy: <b>{price_text}</b> ({cheapest['airline']})", "success")
-        
-        if cheapest["price"] <= int(cfg["threshold"]):
-            add_log("🎯 Phát hiện vé hời! Tiến hành gửi báo động về điện thoại...", "alert")
-            
-            link_dat_ve = cheapest.get("deep_link", "https://www.google.com/travel/flights")
-            
-            msg = (
-                f"🎯 <b>BÁO ĐỘNG SĂN VÉ THÀNH CÔNG!</b>\n\n"
-                f"✈️ Chặng bay: <b>{cfg['origin']} ➔ {cfg['destination']}</b>\n"
-                f"📅 Ngày bay: {cfg['fly_date']}\n"
-                f"💵 Giá vé thấp nhất: <b>{price_text}</b> 🌟\n"
-                f"運 Hãng đề xuất: {cheapest['airline']} ({cheapest['id']})\n"
-                f"⏰ Giờ bay: {cheapest['departure']} ➔ {cheapest['arrival']}\n\n"
-                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT VÉ NGAY</a></b>\n\n"
-                f"📱 Xem danh sách chi tiết tại Webapp Render!"
-            )
-            send_telegram(msg)
-            
-    except Exception as e:
-        add_log(f"💥 Lỗi hệ thống quét vé: {str(e)}", "error")
-
-# Khởi tạo bộ lịch chạy ngầm
-scheduler = BackgroundScheduler()
-scheduler.start()
-
-def update_scheduler_interval(minutes: int):
-    job_id = "flight_scan_job"
-    if scheduler.get_job(job_id):
-        scheduler.remove_job(job_id)
-    
-    scheduler.add_job(
-        scan_job,
-        trigger=IntervalTrigger(minutes=minutes),
-        id=job_id,
-        replace_existing=True
-    )
-    logger.info(f"Đã cập nhật lịch quét vé ngầm: {minutes} phút/lần.")
-
-update_scheduler_interval(state["config"]["interval"])
-
-# ═════════════════════════════════════════════════════════════
-#  CÁC ROUTE ĐIỀU HƯỚNG WEB INTERFACE
-# ════════════════════════════════════════════─
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/api/state", methods=["GET"])
-def api_get_state():
-    return jsonify({
-        "config": state["config"],
-        "results": state["results"],
-        "logs": state["logs"],
-        "last_scan": state["last_scan"],
-        "bot_status": "running" if state["config"]["is_active"] else "idle"
-    })
-
-@app.route("/api/config", methods=["POST"])
-def api_save_config():
-    data = request.json or {}
-    old_interval = state["config"]["interval"]
-    
-    state["config"]["origin"] = data.get("origin", state["config"]["origin"]).upper()
-    state["config"]["destination"] = data.get("destination", state["config"]["destination"]).upper()
-    state["config"]["fly_date"] = data.get("fly_date", state["config"]["fly_date"])
-    state["config"]["threshold"] = int(data.get("threshold", state["config"]["threshold"]))
-    state["config"]["interval"] = int(data.get("interval", state["config"]["interval"]))
-    state["config"]["is_active"] = bool(data.get("is_active", state["config"]["is_active"]))
-    
-    if state["config"]["interval"] != old_interval:
-        update_scheduler_interval(state["config"]["interval"])
-        
-    status_str = "KÍCH HOẠT 🟢" if state["config"]["is_active"] else "TẮT ĐI 🔴"
-    add_log(f"⚙️ Đã lưu cấu hình mới. Trạng thái Bot: {status_str}", "info")
-    
-    if state["config"]["is_active"]:
-        threading.Thread(target=scan_job, daemon=True).start()
-        
-    return jsonify({"ok": True})
-
-@app.route("/api/scan-now", methods=["POST"])
-def api_scan_now():
-    if not state["config"]["is_active"]:
-        state["config"]["is_active"] = True
-    threading.Thread(target=scan_job, daemon=True).start()
-    return jsonify({"ok": True, "msg": "Đang tiến hành quét ngay..."})
-
-@app.route("/api/clear-logs", methods=["POST"])
-def api_clear_logs():
-    state["logs"] = []
-    return jsonify({"ok": True})
-
-@app.route("/api/test-telegram", methods=["POST"])
-def api_test_telegram():
-    ok = send_telegram(
-        "✅ <b>Flight Hunter Bot</b> đã kiểm tra kết nối chuỗi thành công!\n"
-        f"🕐 Ngày giờ hệ thống: {datetime.now().strftime('%H:%M:%S %d/%m/%Y')}\n"
-        "Đường truyền thông báo điện thoại của bạn đã thông suốt! ✈️"
-    )
-    if ok:
-        add_log("✅ Gửi tin nhắn kiểm tra Telegram thành công!", "alert")
-        return jsonify({"ok": True, "msg": "Gửi thành công!"})
-    else:
-        add_log("❌ Gửi kiểm tra Telegram thất bại — Hãy cập nhật TOKEN/CHAT_ID thực trên Render.", "error")
-        return jsonify({"ok": False, "msg": "Thất bại! Vui lòng điền đúng mã Token."}), 400
-
-if __name__ == "__main__":
-    add_log("🚀 Khởi động máy chủ săn vé máy bay thành công!", "info")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    if not state["
