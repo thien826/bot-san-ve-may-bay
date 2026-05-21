@@ -50,7 +50,7 @@ state = {
     "last_scan": None,
 }
 
-# Lấy cấu hình Telegram bảo mật từ môi trường (Mặc định dùng Token giả lập nếu chạy local)
+# Lấy cấu hình Telegram bảo mật từ môi trường
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "123456:FAKE_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "123456")
 
@@ -63,29 +63,25 @@ def add_log(message: str, log_type: str = "info"):
     logger.info(f"[{log_type.upper()}] {message}")
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG (TRAVELOKA / GOOGLE FLIGHTS)
+#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG CHUẨN
 # ═════════════════════════════════════════════════════════════
 def generate_flight_link(origin: str, destination: str, date_str: str) -> str:
     """
-    Hàm tự động tính toán cấu trúc URL để tạo link nhảy thẳng vào trang đặt vé
+    Hàm tự động tính toán cấu trúc URL chuẩn để nhảy thẳng vào trang đặt vé
     """
     try:
-        # Chuyển đổi định dạng ngày từ YYYY-MM-DD sang DD-MM-YYYY cho Traveloka
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        date_traveloka = date_obj.strftime("%d-%m-%Y")
         
-        # LỰA CHỌN 1: Link trực tiếp tới trang tìm vé của Traveloka (Đang bật mặc định)
-        link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
+        # [MẶC ĐỊNH] Cấu trúc link tìm kiếm Google Flights chuẩn không bị nhận nhầm địa danh
+        link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}%20oneway"
         
-        # LỰA CHỌN 2: Link tới Google Flights (Nếu muốn dùng, hãy xóa dấu '#' ở dòng dưới và thêm '#' vào dòng Traveloka)
-        # link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
-        
-        # LỰA CHỌN 3: Link tới Skyscanner
-        # link = f"https://www.skyscanner.com.vn/transport/flights/{origin.lower()}/{destination.lower()}/{date_obj.strftime('%y%m%d')}/"
+        # [TÙY CHỌN] Nếu bạn muốn đổi sang Traveloka, hãy xóa dấu '#' ở dòng dưới và thêm '#' vào dòng Google Flights phía trên
+        # date_traveloka = date_obj.strftime("%d-%m-%Y")
+        # link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
         
         return link
     except Exception:
-        return "https://www.traveloka.com/vi-vn/flight"
+        return "https://www.google.com/travel/flights"
 
 # ═════════════════════════════════════════════════════════════
 #  HÀM CÀO DỮ LIỆU GIÁ VÉ THẬT (WEB SCRAPING)
@@ -105,7 +101,7 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
             {"name": "Pacific Airlines", "code": "BL"}
         ]
         
-        # Tạo link đặt vé tương ứng với chặng bay hiện tại
+        # Tạo link nhảy thẳng chuẩn chặng động
         deep_link_url = generate_flight_link(origin, destination, date_str)
         
         random.seed(int(time.time()))
@@ -179,7 +175,7 @@ def scan_job():
         if cheapest["price"] <= int(cfg["threshold"]):
             add_log("🎯 Phát hiện vé hời! Tiến hành gửi báo động về điện thoại...", "alert")
             
-            link_dat_ve = cheapest.get("deep_link", "https://www.traveloka.com")
+            link_dat_ve = cheapest.get("deep_link", "https://www.google.com/travel/flights")
             
             msg = (
                 f"🎯 <b>BÁO ĐỘNG SĂN VÉ THÀNH CÔNG!</b>\n\n"
@@ -188,7 +184,7 @@ def scan_job():
                 f"💵 Giá vé thấp nhất: <b>{price_text}</b> 🌟\n"
                 f"運 Hãng đề xuất: {cheapest['airline']} ({cheapest['id']})\n"
                 f"⏰ Giờ bay: {cheapest['departure']} ➔ {cheapest['arrival']}\n\n"
-                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT TRÊN TRAVELOKA</a></b>\n\n"
+                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT VÉ NGAY</a></b>\n\n"
                 f"📱 Xem danh sách chi tiết tại Webapp Render!"
             )
             send_telegram(msg)
@@ -217,7 +213,7 @@ update_scheduler_interval(state["config"]["interval"])
 
 # ═════════════════════════════════════════════════════════════
 #  CÁC ROUTE ĐIỀU HƯỚNG WEB INTERFACE
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════─
 @app.route("/")
 def index():
     return render_template("index.html")
