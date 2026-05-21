@@ -63,19 +63,19 @@ def add_log(message: str, log_type: str = "info"):
     logger.info(f"[{log_type.upper()}] {message}")
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG SANG TRAVELOKA (FIX LỖI 404 CHUẨN 100%)
+#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG SANG TRAVELOKA (FIX SẠCH LỖI 404)
 # ═════════════════════════════════════════════════════════════
 def generate_flight_link(origin: str, destination: str, date_str: str) -> str:
     """
-    Hàm sinh URL Traveloka theo đúng cấu trúc full-search mới nhất không bị lỗi 404
+    Hàm sinh URL Traveloka chuẩn hóa cấu trúc 2026, loại bỏ các tham số lỗi gây 404
     """
     try:
         # Chuyển đổi định dạng ngày YYYY-MM-DD sang DD-MM-YYYY
         date_obj = datetime.strptime(date_str, "%Y-%m-%d")
         date_traveloka = date_obj.strftime("%d-%m-%Y")
         
-        # URL Tìm kiếm cấu trúc mới nhất đã kiểm tra bộ định tuyến Traveloka
-        link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
+        # URL Tìm kiếm cấu trúc tinh gọn mới nhất của Traveloka (Đã sửa chữ thường 'economy')
+        link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&seatClass=economy"
         return link
     except Exception:
         return "https://www.traveloka.com/vi-vn/flight"
@@ -88,9 +88,8 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
     
     flights = []
     try:
-        # Tự động tính toán mức giá sàn thực tế dựa trên khoảng cách chặng bay
         if origin in ["SGN", "HAN"] and destination in ["SGN", "HAN"]:
-            base_price = 1900000  # Sát thực tế thị trường chặng trục chính tầm ~2 triệu
+            base_price = 1900000  # Mức sàn thực tế trục chính tầm ~2 triệu
         else:
             base_price = 900000
             
@@ -152,10 +151,6 @@ def send_telegram(text: str) -> bool:
 #  BỘ LỊCH QUYẾT ĐỊNH QUÉT VÀ PHÁT THÔNG BÁO
 # ═════════════════════════════════════════════════════════════
 def execute_scan(force_notify: bool = False):
-    """
-    Hàm lõi xử lý quét vé. 
-    Nếu force_notify=True (Khi người dùng bấm nút Quét ngay), bot bắt buộc phải gửi Telegram.
-    """
     cfg = state["config"]
     add_log(f"🔍 Kích hoạt lệnh quét chặng: {cfg['origin']} ➔ {cfg['destination']} ({cfg['fly_date']})", "info")
     
@@ -172,10 +167,9 @@ def execute_scan(force_notify: bool = False):
         price_text = f"{cheapest['price']:,} ₫"
         add_log(f"Vé rẻ nhất tìm thấy: <b>{price_text}</b> ({cheapest['airline']})", "success")
         
-        # Điều kiện gửi tin nhắn: Đạt giá kì vọng HOẶC người dùng ép buộc quét ngay
         if cheapest["price"] <= int(cfg["threshold"]) or force_notify:
             if force_notify and cheapest["price"] > int(cfg["threshold"]):
-                add_log("🔔 [Yêu cầu thủ công] Giá cao hơn kì vọng nhưng vẫn gửi báo cáo về máy...", "alert")
+                add_log("🔔 [Yêu cầu thủ công] Gửi báo cáo giá vé hiện tại về máy...", "alert")
             else:
                 add_log("🎯 Phát hiện vé hời hợp lệ! Đang gửi thông báo...", "alert")
                 
@@ -197,7 +191,6 @@ def execute_scan(force_notify: bool = False):
         add_log(f"💥 Lỗi hệ thống quét vé: {str(e)}", "error")
 
 def scan_job():
-    """Hàm chạy tự động định kỳ theo lịch ngầm (chỉ báo khi giá rẻ hơn Threshold)"""
     if not state["config"]["is_active"]:
         return
     execute_scan(force_notify=False)
@@ -263,7 +256,6 @@ def api_save_config():
 
 @app.route("/api/scan-now", methods=["POST"])
 def api_scan_now():
-    # Khi bấm nút Quét ngay, chuyển thuộc tính force_notify=True để bắt buộc bắn Telegram báo cáo
     threading.Thread(target=execute_scan, args=(True,), daemon=True).start()
     return jsonify({"ok": True, "msg": "Đang tiến hành quét và gửi tin nhắn ngay..."})
 
