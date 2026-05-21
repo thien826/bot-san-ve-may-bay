@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✈️ Flight Hunter Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --green: #1D9E75; --green-dk: #0F6E56; --green-lt: #e8f8f2;
+  --navy:  #0d1b2a; --navy2: #1a3a4a;
+  --text:  #111827; --text2: #4b5563; --text3: #9ca3af;
+  --bg:    #f4f6f9; --card:  #ffffff; --border: #e5e7eb;
+  --red:   #ef4444; --amber: #f59e0b; --blue: #3b82f6;
+  --radius: 12px; --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── NAV ── */
+nav{
+  background:var(--navy);height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(0,0,0,0.35);
+}
+.logo{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;
+  color:#fff;text-decoration:none;display:flex;align-items:center;gap:8px}
+.logo span{color:var(--green)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.live-indicator{display:flex;align-items:center;gap:6px;
+  font-size:0.78rem;color:rgba(255,255,255,0.5)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;
+  animation:pulse 1.5s infinite}
+#serverTime{color:rgba(255,255,255,0.8);font-variant-numeric:tabular-nums;
+  font-size:0.82rem;min-width:72px}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(135deg,#0d1b2a 0%,#1a3a4a 50%,#0d3b2e 100%);
+  padding:3rem 2rem 2.5rem;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;
+  width:240px;height:240px;border-radius:50%;
+  border:60px solid rgba(29,158,117,0.08)}
+.hero::after{content:'';position:absolute;bottom:-40px;left:-40px;
+  width:180px;height:180px;border-radius:50%;
+  border:40px solid rgba(29,158,117,0.06)}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;
+  background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.35);
+  color:#5DCAA5;font-size:0.73rem;font-weight:500;letter-spacing:0.07em;
+  text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1rem}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,2.8rem);
+  font-weight:800;color:#fff;line-height:1.15;margin-bottom:0.6rem;position:relative}
+.hero h1 em{color:#5DCAA5;font-style:normal}
+.hero p{color:rgba(255,255,255,0.5);font-size:0.95rem;
+  max-width:480px;margin:0 auto;line-height:1.6;position:relative}
+
+/* ── STATS BAR ── */
+.stats-bar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:0.85rem 2rem;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;
+  max-width:1200px;margin:0 auto;
+}
+@media(max-width:640px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+.stat-item{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;
+  color:var(--text)}
+.stat-num.green{color:var(--green)}
+.stat-lbl{font-size:0.75rem;color:var(--text3);margin-top:1px}
+
+/* ── LAYOUT ── */
+.main-wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1.5rem 3rem;
+  display:grid;grid-template-columns:360px 1fr;gap:1.25rem}
+@media(max-width:900px){.main-wrap{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.card:last-child{margin-bottom:0}
+.card-hd{font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;
+  color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;
+  margin-bottom:1.1rem;display:flex;align-items:center;gap:7px}
+.card-hd i{font-size:1rem;color:var(--green)}
+
+/* ── FORM ── */
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:0.82rem;font-weight:500;
+  color:var(--text2);margin-bottom:5px}
+.form-group input,.form-group select{
+  width:100%;padding:0.6rem 0.75rem;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:0.9rem;
+  outline:none;transition:border-color .15s;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--green)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.price-hint{font-size:0.75rem;color:var(--text3);margin-top:3px}
+
+/* ── INTERVAL SLIDER ── */
+.slider-wrap{position:relative;padding-bottom:1.2rem}
+.slider-wrap input[type=range]{width:100%;accent-color:var(--green)}
+.slider-labels{display:flex;justify-content:space-between;
+  font-size:0.72rem;color:var(--text3);margin-top:2px}
+.slider-val{position:absolute;right:0;top:-22px;
+  font-size:0.8rem;font-weight:500;color:var(--green)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;
+  border:none;border-radius:var(--radius-sm);cursor:pointer;
+  padding:0.6rem 1.2rem;transition:all .15s;text-decoration:none}
+.btn-primary{background:var(--green);color:#fff;width:100%;font-size:1rem;
+  padding:0.75rem;font-family:'Syne',sans-serif;font-weight:700}
+.btn-primary:hover{background:var(--green-dk)}
+.btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-sm{padding:0.4rem 0.9rem;font-size:0.82rem}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:0.75rem}
+
+/* ── STATUS BADGE ── */
+.status-badge{display:inline-flex;align-items:center;gap:6px;
+  font-size:0.8rem;font-weight:500;padding:5px 12px;border-radius:20px}
+.status-running{background:#dcfce7;color:#14532d}
+.status-idle{background:#f3f4f6;color:#6b7280}
+.status-dot-sm{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-running .status-dot-sm{animation:pulse 1.5s infinite}
+
+/* ── TICKET CARDS ── */
+.ticket{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.25rem;
+  display:grid;grid-template-columns:48px 1fr auto;
+  gap:0.875rem;align-items:center;margin-bottom:0.6rem;
+  transition:border-color .12s,box-shadow .12s;
+}
+.ticket:hover{border-color:#c9d0d9;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.ticket.best{border-left:3px solid var(--green);background:var(--green-lt)}
+.ticket.alert{border-left:3px solid var(--amber);background:#fffbeb}
+.airline-ico{width:44px;height:44px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.75rem;letter-spacing:.5px;
+  flex-shrink:0;color:#fff}
+.t-route{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.t-time{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700}
+.t-divider{flex:1;display:flex;flex-direction:column;align-items:center;max-width:80px}
+.t-div-line{width:100%;height:1px;background:var(--border);margin-bottom:3px}
+.t-dur{font-size:0.7rem;color:var(--text3);white-space:nowrap}
+.t-meta{font-size:0.78rem;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap}
+.t-price{text-align:right}
+.t-price-main{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;
+  color:var(--text);white-space:nowrap}
+.t-seats{font-size:0.72rem;color:var(--text3);margin-top:1px;text-align:right}
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;
+  font-weight:600;padding:2px 7px;border-radius:8px}
+.tag-best{background:#dcfce7;color:#14532d}
+.tag-deal{background:#fef3c7;color:#78350f}
+.tag-demo{background:#ede9fe;color:#5b21b6}
+
+/* ── LOG ── */
+.log-wrap{max-height:320px;overflow-y:auto;font-size:0.78rem;font-family:monospace}
+.log-line{padding:3px 0;border-bottom:1px dashed #f3f4f6;
+  display:flex;gap:8px;align-items:baseline}
+.log-line .lt{color:var(--text3);flex-shrink:0;font-size:0.72rem}
+.log-line.alert .msg{color:#059669;font-weight:600}
+.log-line.error .msg{color:var(--red)}
+.log-line.warn  .msg{color:var(--amber)}
+
+/* ── SETUP BANNERS ── */
+.banner{border-radius:var(--radius-sm);padding:0.75rem 1rem;
+  font-size:0.82rem;margin-bottom:0.75rem;display:flex;gap:8px;align-items:flex-start}
+.banner i{flex-shrink:0;font-size:1rem;margin-top:1px}
+.banner-warn{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+.banner-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.banner-ok  {background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty i{font-size:2.8rem;display:block;margin-bottom:0.75rem;opacity:.4}
+.empty p{font-size:0.9rem}
+
+/* ── ANIMATIONS ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn .25s ease}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  nav{padding:0 1rem}
+  .hero{padding:2rem 1rem}
+  .main-wrap{padding:1rem}
+  .ticket{grid-template-columns:36px 1fr auto}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#"><i class="ti ti-plane"></i> Flight<span>Hunter</span></a>
+  <div class="nav-right">
+    <div class="live-indicator">
+      <span class="live-dot" id="liveDot"></span>
+      <span id="serverTime">--:--:--</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><i class="ti ti-bolt"></i> Tự động quét 24/7</div>
+  <h1>Săn Vé <em>Thông Minh</em><br>Thông Báo Tức Thì</h1>
+  <p>Cấu hình một lần — bot tự quét liên tục và gửi Telegram ngay khi phát hiện vé rẻ hơn kỳ vọng của bạn</p>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num" id="st-scan">0</div>
+    <div class="stat-lbl">Lần đã quét</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num green" id="st-alert">0</div>
+    <div class="stat-lbl">Cảnh báo đã gửi</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="st-cheapest">—</div>
+    <div class="stat-lbl">Giá rẻ nhất tìm được</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="st-last">—</div>
+    <div class="stat-lbl">Quét lần cuối</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-wrap">
+
+  <!-- ══ CỘT TRÁI — CẤU HÌNH ══ -->
+  <div>
+
+    <!-- Trạng thái bot -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-hd"><i class="ti ti-robot"></i> Trạng Thái Bot</div>
+      <div id="botStatusBadge" class="status-badge status-idle">
+        <span class="status-dot-sm"></span> Đang nghỉ
+      </div>
+      <div id="setupBanners" style="margin-top:0.75rem"></div>
+    </div>
+
+    <!-- Form cấu hình -->
+    <div class="card">
+      <div class="card-hd"><i class="ti ti-adjustments"></i> Cấu Hình Theo Dõi</div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>🛫 Điểm đi (IATA)</label>
+          <select id="f-origin">
+            <optgroup label="Việt Nam">
+              <option value="SGN" selected>SGN — TP.HCM</option>
+              <option value="HAN">HAN — Hà Nội</option>
+              <option value="DAD">DAD — Đà Nẵng</option>
+              <option value="PQC">PQC — Phú Quốc</option>
+              <option value="CXR">CXR — Nha Trang</option>
+              <option value="VCA">VCA — Cần Thơ</option>
+            </optgroup>
+            <optgroup label="Đông Nam Á">
+              <option value="BKK">BKK — Bangkok</option>
+              <option value="SIN">SIN — Singapore</option>
+              <option value="KUL">KUL — Kuala Lumpur</option>
+              <option value="MNL">MNL — Manila</option>
+              <option value="CGK">CGK — Jakarta</option>
+            </optgroup>
+            <optgroup label="Đông Á">
+              <option value="TYO">TYO — Tokyo</option>
+              <option value="ICN">ICN — Seoul</option>
+              <option value="HKG">HKG — Hồng Kông</option>
+            </optgroup>
+            <optgroup label="Khác">
+              <option value="LHR">LHR — London</option>
+              <option value="CDG">CDG — Paris</option>
+              <option value="SYD">SYD — Sydney</option>
+              <option value="LAX">LAX — Los Angeles</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>🛬 Điểm đến (IATA)</label>
+          <select id="f-dest">
+            <optgroup label="Việt Nam">
+              <option value="HAN" selected>HAN — Hà Nội</option>
+              <option value="SGN">SGN — TP.HCM</option>
+              <option value="DAD">DAD — Đà Nẵng</option>
+              <option value="PQC">PQC — Phú Quốc</option>
+              <option value="CXR">CXR — Nha Trang</option>
+            </optgroup>
+            <optgroup label="Đông Nam Á">
+              <option value="BKK">BKK — Bangkok</option>
+              <option value="SIN">SIN — Singapore</option>
+              <option value="KUL">KUL — KL</option>
+              <option value="MNL">MNL — Manila</option>
+            </optgroup>
+            <optgroup label="Đông Á">
+              <option value="TYO">TYO — Tokyo</option>
+              <option value="ICN">ICN — Seoul</option>
+              <option value="HKG">HKG — Hồng Kông</option>
+            </optgroup>
+            <optgroup label="Khác">
+              <option value="LHR">LHR — London</option>
+              <option value="CDG">CDG — Paris</option>
+              <option value="SYD">SYD — Sydney</option>
+              <option value="LAX">LAX — Los Angeles</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>📅 Ngày bay</label>
+        <input type="date" id="f-date" />
+      </div>
+
+      <div class="form-group">
+        <label>💰 Giá kỳ vọng (VNĐ) — nhận cảnh báo khi giá ≤ mức này</label>
+        <input type="number" id="f-threshold" value="800000" min="100000" max="50000000" step="50000">
+        <div class="price-hint" id="thresholdHint">= 800.000 ₫</div>
+      </div>
+
+      <div class="form-group">
+        <label>⏱️ Quét lại mỗi (phút)</label>
+        <div class="slider-wrap">
+          <span class="slider-val" id="intervalVal">15 phút</span>
+          <input type="range" id="f-interval" min="5" max="60" step="5" value="15"
+            oninput="document.getElementById('intervalVal').textContent=this.value+' phút'">
+          <div class="slider-labels"><span>5</span><span>15</span><span>30</span><span>60</span></div>
+        </div>
+      </div>
+
+      <!-- Toggle bật/tắt -->
+      <div style="display:flex;align-items:center;justify-content:space-between;
+           padding:0.75rem;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:1rem">
+        <div>
+          <div style="font-size:0.88rem;font-weight:500">Kích hoạt theo dõi</div>
+          <div style="font-size:0.75rem;color:var(--text3)">Bot sẽ tự động quét theo lịch</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="f-active">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="saveBtn" onclick="saveConfig()">
+        <i class="ti ti-device-floppy"></i> Lưu & Áp dụng
+      </button>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="scanNow()">
+          <i class="ti ti-refresh"></i> Quét ngay
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="testTelegram()">
+          <i class="ti ti-brand-telegram"></i> Test Telegram
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="clearLogs()">
+          <i class="ti ti-trash"></i> Xóa log
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CỘT PHẢI — KẾT QUẢ & LOG ══ -->
+  <div>
+
+    <!-- Kết quả vé -->
+    <div class="card">
+      <div class="card-hd" style="justify-content:space-between">
+        <span><i class="ti ti-ticket"></i> Kết Quả Vé Mới Nhất</span>
+        <span id="resultsMeta" style="font-size:0.78rem;color:var(--text3);font-weight:400;text-transform:none"></span>
+      </div>
+      <div id="resultsWrap">
+        <div class="empty">
+          <i class="ti ti-plane-off"></i>
+          <p>Chưa có dữ liệu — bật theo dõi hoặc bấm <b>Quét ngay</b></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nhật ký -->
+    <div class="card">
+      <div class="card-hd"><i class="ti ti-list-details"></i> Nhật Ký Hoạt Động</div>
+      <div class="log-wrap" id="logWrap">
+        <div class="empty" style="padding:1.5rem">
+          <i class="ti ti-terminal" style="font-size:1.5rem"></i>
+          <p>Chưa có hoạt động nào...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hướng dẫn setup -->
+    <div class="card">
+      <div class="card-hd"><i class="ti ti-help-circle"></i> Hướng Dẫn Cấu Hình</div>
+      <div style="font-size:0.83rem;color:var(--text2);line-height:1.8">
+        <b>1. Telegram Bot:</b> Nhắn <code>/newbot</code> cho
+        <a href="https://t.me/BotFather" target="_blank">@BotFather</a> → nhận TOKEN<br>
+        <b>2. Chat ID:</b> Dùng <code>@ten_kenh</code> (kênh public) hoặc <code>-100xxxxxxx</code> (nhóm)<br>
+        <b>3. Biến môi trường</b> cần thêm vào Render.com:<br>
+        <pre style="background:var(--bg);padding:0.75rem;border-radius:6px;margin-top:0.5rem;
+          font-size:0.78rem;overflow-x:auto">TELEGRAM_TOKEN=your_token
+TELEGRAM_CHAT_ID=@your_channel
+AMADEUS_API_KEY=your_key      # tuỳ chọn
+AMADEUS_API_SECRET=your_secret
+APP_URL=https://your-app.onrender.com</pre>
+        <b>4. Amadeus API</b> (miễn phí):
+        <a href="https://developers.amadeus.com" target="_blank">developers.amadeus.com</a>
+        → Sign Up → My Apps
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOGGLE CSS -->
+<style>
+.toggle-switch{position:relative;display:inline-block;width:46px;height:26px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:13px;
+  cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;
+  left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;
+  box-shadow:0 1px 4px rgba(0,0,0,.2)}
+input:checked+.toggle-slider{background:var(--green)}
+input:checked+.toggle-slider::before{transform:translateX(20px)}
+</style>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1a1a1a;color:#fff;padding:9px 20px;border-radius:20px;font-size:0.85rem;
+  transition:transform .3s;z-index:9999;pointer-events:none;white-space:nowrap"></div>
+
+<script>
+// ── Thiết lập ngày mặc định ──
+(function(){
+  const d = new Date(); d.setDate(d.getDate()+7);
+  document.getElementById('f-date').value = d.toISOString().split('T')[0];
+  document.getElementById('f-date').min   = new Date().toISOString().split('T')[0];
+  document.getElementById('f-threshold').addEventListener('input', e => {
+    const v = parseInt(e.target.value)||0;
+    document.getElementById('thresholdHint').textContent = '= ' + v.toLocaleString('vi-VN') + ' ₫';
+  });
+})();
+
+// ── Toast helper ──
+function showToast(msg, dur=2800){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(()=>{ t.style.transform = 'translateX(-50%) translateY(80px)'; }, dur);
+}
+
+// ── Lưu cấu hình ──
+async function saveConfig(){
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Đang lưu...';
+  const body = {
+    origin:      document.getElementById('f-origin').value,
+    destination: document.getElementById('f-dest').value,
+    fly_date:    document.getElementById('f-date').value,
+    threshold:   parseInt(document.getElementById('f-threshold').value),
+    interval:    parseInt(document.getElementById('f-interval').value),
+    is_active:   document.getElementById('f-active').checked,
+  };
+  try {
+    const r = await fetch('/api/config', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if(d.ok){
+      showToast(body.is_active ? '✅ Bot đã kích hoạt!' : '✅ Đã lưu cấu hình');
+    } else {
+      showToast('❌ ' + (d.error || 'Lỗi không xác định'));
+    }
+  } catch(e){ showToast('❌ Lỗi kết nối server'); }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-device-floppy"></i> Lưu & Áp dụng';
+}
+
+// ── Quét thủ công ──
+async function scanNow(){
+  showToast('🔍 Đang quét...');
+  await fetch('/api/scan-now', {method:'POST'});
+  setTimeout(fetchStatus, 2000);
+}
+
+// ── Test Telegram ──
+async function testTelegram(){
+  showToast('📨 Đang gửi test...');
+  const r = await fetch('/api/test-telegram', {method:'POST'});
+  const d = await r.json();
+  showToast(d.ok ? '✅ ' + d.msg : '❌ ' + d.msg, 3500);
+}
+
+// ── Xóa log ──
+async function clearLogs(){
+  await fetch('/api/clear-logs', {method:'POST'});
+  document.getElementById('logWrap').innerHTML =
+    '<div class="empty" style="padding:1.5rem"><i class="ti ti-terminal" style="font-size:1.5rem"></i><p>Đã xóa log.</p></div>';
+  showToast('🗑️ Đã xóa nhật ký');
+}
+
+// ── Màu hãng bay ──
+const airlineColors = {
+  VJ:'#FF3366', VN:'#00529B', QH:'#00843D',
+  BL:'#FF6600', VU:'#E4002B', SQ:'#014D8E',
+  TG:'#3C0072', MH:'#CC0001', TR:'#FFCC00',
+  AK:'#E60000', EK:'#D71921', QR:'#5C0632',
+};
+function airlineColor(code){ return airlineColors[code] || '#6b7280'; }
+
+// ── Render danh sách vé ──
+function renderFlights(flights, threshold){
+  const wrap = document.getElementById('resultsWrap');
+  if(!flights || !flights.length){
+    wrap.innerHTML = '<div class="empty"><i class="ti ti-ticket-off"></i><p>Không tìm thấy chuyến bay</p></div>';
+    return;
+  }
+  const sorted = [...flights].sort((a,b)=>a.price-b.price);
+  const fmt = p => p.toLocaleString('vi-VN');
+  wrap.innerHTML = sorted.map((f,i)=>{
+    const isBest  = i===0;
+    const isDeal  = f.price <= threshold;
+    const bg      = airlineColor(f.carrier_code || f.carrier.substring(0,2));
+    const stops   = f.stops===0 ? '✈ Bay thẳng' : `⚠ ${f.stops} dừng`;
+    const tags    = (isBest?`<span class="tag tag-best">🏆 Rẻ nhất</span>`:'')
+                  + (isDeal?`<span class="tag tag-deal">🔔 Dưới ngưỡng</span>`:'')
+                  + (f.is_demo?`<span class="tag tag-demo">Demo</span>`:'');
+    const cls     = isBest ? 'ticket best' : (isDeal ? 'ticket alert' : 'ticket');
+    return `<div class="${cls} fade-in">
+      <div class="airline-ico" style="background:${bg}">
+        ${(f.carrier_code||f.carrier).substring(0,2)}
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-weight:600;font-size:0.9rem">${f.flight}</span>
+          <span style="font-size:0.78rem;color:var(--text3)">${f.carrier}</span>
+          ${tags}
+        </div>
+        <div class="t-route">
+          <span class="t-time">${f.dep_time}</span>
+          <div class="t-divider"><div class="t-div-line"></div><div class="t-dur">${f.duration}</div></div>
+          <span class="t-time">${f.arr_time}</span>
+        </div>
+        <div class="t-meta">
+          <span>${f.origin} → ${f.destination}</span>
+          <span>${stops}</span>
+          <span>💺 ${f.seats} ghế</span>
+        </div>
+      </div>
+      <div class="t-price">
+        <div style="font-size:0.7rem;color:var(--text3)">từ</div>
+        <div class="t-price-main">${fmt(f.price)}₫</div>
+        <div class="t-seats">${f.source}</div>
+        ${f.booking_url?`<a href="${f.booking_url}" target="_blank"
+          style="font-size:0.72rem;color:var(--green);text-decoration:none">Đặt vé →</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render log ──
+function renderLogs(logs){
+  const wrap = document.getElementById('logWrap');
+  if(!logs || !logs.length){
+    wrap.innerHTML = '<div class="empty" style="padding:1.5rem"><i class="ti ti-terminal" style="font-size:1.5rem"></i><p>Chưa có hoạt động</p></div>';
+    return;
+  }
+  wrap.innerHTML = logs.map(l=>`
+    <div class="log-line ${l.level}">
+      <span class="lt">[${l.time}]</span>
+      <span class="msg">${l.msg}</span>
+    </div>`).join('');
+}
+
+// ── Render banners setup ──
+function renderBanners(tg_ok, api_ok){
+  const el = document.getElementById('setupBanners');
+  let html = '';
+  if(!tg_ok) html += `<div class="banner banner-warn"><i class="ti ti-brand-telegram"></i><div>
+    <b>Chưa cấu hình Telegram.</b> Thêm <code>TELEGRAM_TOKEN</code> và <code>TELEGRAM_CHAT_ID</code>
+    vào biến môi trường để nhận thông báo.</div></div>`;
+  if(!api_ok) html += `<div class="banner banner-info"><i class="ti ti-info-circle"></i><div>
+    <b>Dữ liệu demo.</b> Chưa có Amadeus API. Thêm <code>AMADEUS_API_KEY</code> để xem giá vé thật.</div></div>`;
+  if(tg_ok && api_ok) html = `<div class="banner banner-ok"><i class="ti ti-circle-check"></i>
+    <div><b>Tất cả đã cấu hình.</b> Bot sẵn sàng hoạt động hoàn chỉnh.</div></div>`;
+  el.innerHTML = html;
+}
+
+// ── Poll trạng thái mỗi 5 giây ──
+async function fetchStatus(){
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+
+    // Đồng hồ
+    document.getElementById('serverTime').textContent = d.server_time;
+
+    // Stats
+    document.getElementById('st-scan').textContent    = d.scan_count;
+    document.getElementById('st-alert').textContent   = d.alerts_sent;
+    document.getElementById('st-last').textContent    = d.last_scan || '—';
+    if(d.cheapest){
+      document.getElementById('st-cheapest').textContent =
+        d.cheapest.price.toLocaleString('vi-VN') + '₫';
+    }
+
+    // Status badge
+    const badge = document.getElementById('botStatusBadge');
+    if(d.bot_status === 'running'){
+      badge.className = 'status-badge status-running';
+      badge.innerHTML = '<span class="status-dot-sm"></span> Đang theo dõi — '
+        + d.config.origin + ' → ' + d.config.destination;
+    } else {
+      badge.className = 'status-badge status-idle';
+      badge.innerHTML = '<span class="status-dot-sm"></span> Đang nghỉ';
+    }
+
+    // Đồng bộ form với config từ server
+    document.getElementById('f-origin').value    = d.config.origin;
+    document.getElementById('f-dest').value      = d.config.destination;
+    document.getElementById('f-date').value      = d.config.fly_date;
+    document.getElementById('f-threshold').value = d.config.threshold;
+    document.getElementById('f-interval').value  = d.config.interval;
+    document.getElementById('intervalVal').textContent = d.config.interval + ' phút';
+    document.getElementById('f-active').checked  = d.config.is_active;
+    document.getElementById('thresholdHint').textContent =
+      '= ' + parseInt(d.config.threshold).toLocaleString('vi-VN') + ' ₫';
+
+    // Vé & log
+    const meta = d.results.length
+      ? `${d.results.length} chuyến · ${d.last_scan||''}`
+      : '';
+    document.getElementById('resultsMeta').textContent = meta;
+    renderFlights(d.results, d.config.threshold);
+    renderLogs(d.logs);
+    renderBanners(d.telegram_ok, d.api_ok);
+
+  } catch(e){ /* server đang khởi động */ }
+}
+
+fetchStatus();
+setInterval(fetchStatus, 5000);
+</script>
+</body>
+</html>
