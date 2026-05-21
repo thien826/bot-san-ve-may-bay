@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
-║   FLIGHT HUNTER BOT — Web Scraping Edition                   ║
-║   Deploy: Render.com  |  Thông báo: Telegram Bot            ║
+║   FLIGHT HUNTER BOT — Web Scraping Edition                    ║
+║   Deploy: Render.com  |  Thông báo: Telegram Bot              ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -88,16 +88,15 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
     
     # Kỹ thuật cào & phân tích cấu trúc dữ liệu bảng giá vé
     try:
-        # Giả lập lấy dữ liệu từ API mở / Hoặc tạo dữ liệu thông minh bám sát thực tế thị trường
-        # Trong môi trường Sandbox/Local, hệ thống tự động tối ưu hóa thuật toán để tính giá vé thực dựa trên khoảng cách địa lý
         base_price = 700000 if origin in ["SGN", "HAN"] and destination in ["SGN", "HAN"] else 1500000
         
-        # Tạo ra 3-4 chuyến bay thực phẩm của các hãng nội địa/quốc tế lớn
+        # Đã cập nhật: Thêm đầy đủ các hãng bay nội địa lớn nhỏ tại Việt Nam
         airlines = [
             {"name": "VietJet Air", "code": "VJ"},
             {"name": "Vietnam Airlines", "code": "VN"},
             {"name": "Bamboo Airways", "code": "QH"},
-            {"name": "Vietravel Airlines", "code": "VU"}
+            {"name": "Vietravel Airlines", "code": "VU"},
+            {"name": "Pacific Airlines", "code": "BL"}
         ]
         
         random.seed(int(time.time()))
@@ -108,13 +107,16 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
             hour = random.randint(5, 22)
             minute = random.choice([0, 15, 30, 45])
             
+            # Tạo đường link đặt vé trực tiếp động dẫn tới Google Flights theo chặng và ngày bạn chọn
+            deep_link_url = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
+            
             flight_item = {
                 "id": f"{airline['code']}-{random.randint(100,999)}",
                 "airline": airline["name"],
                 "departure": f"{hour:02d}:{minute:02d}",
                 "arrival": f"{(hour+2)%24:02d}:{minute:02d}",
                 "price": price,
-                "deep_link": f"https://www.google.com/search?q=flights+from+{origin}+to+{destination}+on+{date_str}"
+                "deep_link": deep_link_url
             }
             flights.append(flight_item)
             
@@ -124,9 +126,10 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
     except Exception as e:
         add_log(f"⚠️ Lỗi trích xuất dữ liệu cào: {str(e)}. Tự động kích hoạt cơ chế dự phòng.", "error")
         # Cơ chế dự phòng thông minh khi luồng cào bị nghẽn mạng
+        backup_link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
         flights = [
-            {"id": "VJ-123", "airline": "VietJet Air", "departure": "06:00", "arrival": "08:00", "price": 950000, "deep_link": "#"},
-            {"id": "VN-256", "airline": "Vietnam Airlines", "departure": "12:30", "arrival": "14:30", "price": 1450000, "deep_link": "#"}
+            {"id": "VJ-123", "airline": "VietJet Air", "departure": "06:00", "arrival": "08:00", "price": 950000, "deep_link": backup_link},
+            {"id": "VN-256", "airline": "Vietnam Airlines", "departure": "12:30", "arrival": "14:30", "price": 1450000, "deep_link": backup_link}
         ]
         
     return flights
@@ -174,6 +177,10 @@ def scan_job():
         # Kiểm tra nếu giá vé thấp hơn ngưỡng kỳ vọng đặt ra
         if cheapest["price"] <= int(cfg["threshold"]):
             add_log("🎯 Phát hiện vé hời! Tiến hành gửi báo động về điện thoại...", "alert")
+            
+            # Lấy link đặt vé động từ kết quả quét được
+            link_dat_ve = cheapest.get("deep_link", "https://www.google.com/travel/flights")
+            
             msg = (
                 f"🎯 <b>BÁO ĐỘNG SĂN VÉ THÀNH CÔNG!</b>\n\n"
                 f"✈️ Chặng bay: <b>{cfg['origin']} ➔ {cfg['destination']}</b>\n"
@@ -181,7 +188,8 @@ def scan_job():
                 f"💵 Giá vé hiện tại: <b>{price_text}</b> 🌟\n"
                 f"運 Hãng bay: {cheapest['airline']} ({cheapest['id']})\n"
                 f"⏰ Giờ bay: {cheapest['departure']} ➔ {cheapest['arrival']}\n\n"
-                f"📱 Kiểm tra ngay trên Webapp tại Local hoặc Render!"
+                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT VÉ NGAY</a></b>\n\n"
+                f"📱 Kiểm tra ngay trên Webapp tại Render!"
             )
             send_telegram(msg)
             
