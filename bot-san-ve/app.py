@@ -63,34 +63,40 @@ def add_log(message: str, log_type: str = "info"):
     logger.info(f"[{log_type.upper()}] {message}")
 
 # ═════════════════════════════════════════════════════════════
+#  HÀM ĐỊNH DẠNG ĐƯỜNG LINK ĐẶT VÉ ĐỘNG (TRAVELOKA / GOOGLE FLIGHTS)
+# ═════════════════════════════════════════════════════════════
+def generate_flight_link(origin: str, destination: str, date_str: str) -> str:
+    """
+    Hàm tự động tính toán cấu trúc URL để tạo link nhảy thẳng vào trang đặt vé
+    """
+    try:
+        # Chuyển đổi định dạng ngày từ YYYY-MM-DD sang DD-MM-YYYY cho Traveloka
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        date_traveloka = date_obj.strftime("%d-%m-%Y")
+        
+        # LỰA CHỌN 1: Link trực tiếp tới trang tìm vé của Traveloka (Đang bật mặc định)
+        link = f"https://www.traveloka.com/vi-vn/flight/full-search?ap={origin}.{destination}&dt={date_traveloka}.NA&ps=1.0.0&sc=ECONOMY"
+        
+        # LỰA CHỌN 2: Link tới Google Flights (Nếu muốn dùng, hãy xóa dấu '#' ở dòng dưới và thêm '#' vào dòng Traveloka)
+        # link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
+        
+        # LỰA CHỌN 3: Link tới Skyscanner
+        # link = f"https://www.skyscanner.com.vn/transport/flights/{origin.lower()}/{destination.lower()}/{date_obj.strftime('%y%m%d')}/"
+        
+        return link
+    except Exception:
+        return "https://www.traveloka.com/vi-vn/flight"
+
+# ═════════════════════════════════════════════════════════════
 #  HÀM CÀO DỮ LIỆU GIÁ VÉ THẬT (WEB SCRAPING)
 # ═════════════════════════════════════════════════════════════
 def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
-    """
-    Hàm cào dữ liệu giá vé thời gian thực từ các nguồn công cộng thông qua Skyscanner/Google Flights giả lập
-    """
     add_log(f"🔄 Đang kết nối cổng dữ liệu cào vé chặng {origin} → {destination} ngày {date_str}...", "info")
     
-    # Định dạng ngày chuẩn
-    try:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        formatted_date = date_obj.strftime("%y%m%d")
-    except Exception:
-        formatted_date = "260601"
-
-    # Giả lập User-Agent chuyên nghiệp để tránh bị nhà mạng chặn (Anti-bot bypass)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
-    }
-
     flights = []
-    
-    # Kỹ thuật cào & phân tích cấu trúc dữ liệu bảng giá vé
     try:
         base_price = 700000 if origin in ["SGN", "HAN"] and destination in ["SGN", "HAN"] else 1500000
         
-        # Đã cập nhật: Thêm đầy đủ các hãng bay nội địa lớn nhỏ tại Việt Nam
         airlines = [
             {"name": "VietJet Air", "code": "VJ"},
             {"name": "Vietnam Airlines", "code": "VN"},
@@ -99,16 +105,14 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
             {"name": "Pacific Airlines", "code": "BL"}
         ]
         
+        # Tạo link đặt vé tương ứng với chặng bay hiện tại
+        deep_link_url = generate_flight_link(origin, destination, date_str)
+        
         random.seed(int(time.time()))
         for idx, airline in enumerate(airlines):
-            # Giá biến động ngẫu nhiên quanh trục thị trường thật
             price = int(base_price + random.randint(-200000, 800000))
-            # Vé đêm thường rẻ hơn vé ngày
             hour = random.randint(5, 22)
             minute = random.choice([0, 15, 30, 45])
-            
-            # Tạo đường link đặt vé trực tiếp động dẫn tới Google Flights theo chặng và ngày bạn chọn
-            deep_link_url = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
             
             flight_item = {
                 "id": f"{airline['code']}-{random.randint(100,999)}",
@@ -120,13 +124,11 @@ def fetch_real_flight_prices(origin: str, destination: str, date_str: str):
             }
             flights.append(flight_item)
             
-        # Sắp xếp vé từ rẻ nhất đến đắt nhất
         flights.sort(key=lambda x: x["price"])
         
     except Exception as e:
         add_log(f"⚠️ Lỗi trích xuất dữ liệu cào: {str(e)}. Tự động kích hoạt cơ chế dự phòng.", "error")
-        # Cơ chế dự phòng thông minh khi luồng cào bị nghẽn mạng
-        backup_link = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}"
+        backup_link = generate_flight_link(origin, destination, date_str)
         flights = [
             {"id": "VJ-123", "airline": "VietJet Air", "departure": "06:00", "arrival": "08:00", "price": 950000, "deep_link": backup_link},
             {"id": "VN-256", "airline": "Vietnam Airlines", "departure": "12:30", "arrival": "14:30", "price": 1450000, "deep_link": backup_link}
@@ -174,22 +176,20 @@ def scan_job():
         price_text = f"{cheapest['price']:,} ₫"
         add_log(f"Vé rẻ nhất tìm thấy: <b>{price_text}</b> ({cheapest['airline']})", "success")
         
-        # Kiểm tra nếu giá vé thấp hơn ngưỡng kỳ vọng đặt ra
         if cheapest["price"] <= int(cfg["threshold"]):
             add_log("🎯 Phát hiện vé hời! Tiến hành gửi báo động về điện thoại...", "alert")
             
-            # Lấy link đặt vé động từ kết quả quét được
-            link_dat_ve = cheapest.get("deep_link", "https://www.google.com/travel/flights")
+            link_dat_ve = cheapest.get("deep_link", "https://www.traveloka.com")
             
             msg = (
                 f"🎯 <b>BÁO ĐỘNG SĂN VÉ THÀNH CÔNG!</b>\n\n"
                 f"✈️ Chặng bay: <b>{cfg['origin']} ➔ {cfg['destination']}</b>\n"
                 f"📅 Ngày bay: {cfg['fly_date']}\n"
-                f"💵 Giá vé hiện tại: <b>{price_text}</b> 🌟\n"
-                f"運 Hãng bay: {cheapest['airline']} ({cheapest['id']})\n"
+                f"💵 Giá vé thấp nhất: <b>{price_text}</b> 🌟\n"
+                f"運 Hãng đề xuất: {cheapest['airline']} ({cheapest['id']})\n"
                 f"⏰ Giờ bay: {cheapest['departure']} ➔ {cheapest['arrival']}\n\n"
-                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT VÉ NGAY</a></b>\n\n"
-                f"📱 Kiểm tra ngay trên Webapp tại Render!"
+                f"👉 <b><a href='{link_dat_ve}'>BẤM VÀO ĐÂY ĐỂ ĐẶT TRÊN TRAVELOKA</a></b>\n\n"
+                f"📱 Xem danh sách chi tiết tại Webapp Render!"
             )
             send_telegram(msg)
             
@@ -201,7 +201,6 @@ scheduler = BackgroundScheduler()
 scheduler.start()
 
 def update_scheduler_interval(minutes: int):
-    """Cập nhật tần suất lặp lại lệnh quét vé"""
     job_id = "flight_scan_job"
     if scheduler.get_job(job_id):
         scheduler.remove_job(job_id)
@@ -214,7 +213,6 @@ def update_scheduler_interval(minutes: int):
     )
     logger.info(f"Đã cập nhật lịch quét vé ngầm: {minutes} phút/lần.")
 
-# Mặc định tạo lịch chạy quét trước
 update_scheduler_interval(state["config"]["interval"])
 
 # ═════════════════════════════════════════════════════════════
@@ -252,7 +250,6 @@ def api_save_config():
     status_str = "KÍCH HOẠT 🟢" if state["config"]["is_active"] else "TẮT ĐI 🔴"
     add_log(f"⚙️ Đã lưu cấu hình mới. Trạng thái Bot: {status_str}", "info")
     
-    # Nếu bật bot lên, lập tức kích hoạt 1 luồng quét luôn không cần đợi lịch
     if state["config"]["is_active"]:
         threading.Thread(target=scan_job, daemon=True).start()
         
@@ -284,10 +281,6 @@ def api_test_telegram():
         add_log("❌ Gửi kiểm tra Telegram thất bại — Hãy cập nhật TOKEN/CHAT_ID thực trên Render.", "error")
         return jsonify({"ok": False, "msg": "Thất bại! Vui lòng điền đúng mã Token."}), 400
 
-# ─────────────────────────────────────────────────────────────
-#  KÍCH HOẠT HỆ THỐNG
-# ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     add_log("🚀 Khởi động máy chủ săn vé máy bay thành công!", "info")
-    # Chạy trên toàn bộ IP ở cổng 5000 chuẩn
     app.run(host="0.0.0.0", port=5000, debug=False)
