@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
 ║   FLIGHT & HOTEL HUNTER — Full Account Management            ║
-║   Bổ sung: Menu chọn sân bay trực quan & Fix lỗi Link 404    ║
+║   ĐÃ FIX: Lỗi click link ĐẶT VÉ NGAY bị về Google.com        ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 
 DATA_FILE = "premium_hunter_data.json"
 
-# Danh sách sân bay hỗ trợ chọn nhanh
 AIRPORTS = [
     {"code": "SGN", "name": "SGN - TP. Hồ Chí Minh"},
     {"code": "HAN", "name": "HAN - Hà Nội"},
@@ -93,15 +92,15 @@ def add_log(message: str, log_type: str = "info"):
     save_data_permanently()
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG (FIX LỖI 404)
+#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG (ĐÃ SỬA LỖI ĐỊNH DẠNG NGÀY)
 # ═════════════════════════════════════════════════════════════
 def generate_direct_links(type_search: str, item_name: str, code1: str, code2: str, date_str: str) -> str:
     try:
         if type_search == "flight":
-            # Chuẩn hóa định dạng ngày từ YYYY-MM-DD thành DD-MM-YYYY cho đại lý Việt Nam
             if date_str and "-" in date_str:
                 parts = date_str.split("-")
-                if len(parts)[0] == 4:
+                # ĐÃ SỬA: Kiểm tra độ dài phần tử đầu tiên chính xác (Ví dụ: '2026' có độ dài là 4)
+                if len(parts[0]) == 4:
                     date_formatted = f"{parts[2]}-{parts[1]}-{parts[0]}"
                 else:
                     date_formatted = date_str
@@ -115,7 +114,6 @@ def generate_direct_links(type_search: str, item_name: str, code1: str, code2: s
             elif "Bamboo" in item_name:
                 return f"https://www.bambooairways.com/reservation/v1/flights?origin={code1}&destination={code2}&departureDate={date_str}&adults=1"
             
-            # Khớp định dạng chuẩn mã Traveloka để không bị 404 hệ thống
             return f"https://www.traveloka.com/vi-vn/flight/search?ap={code1}.{code2}&dt={date_formatted}.NA&ps=1.0.0&sc=ECONOMY"
         else:
             query_city = code1.replace(" ", "%20")
@@ -124,21 +122,22 @@ def generate_direct_links(type_search: str, item_name: str, code1: str, code2: s
             elif "Booking" in item_name:
                 return f"https://www.booking.com/searchresults.vi.html?ss={query_city}"
             return f"https://www.traveloka.com/vi-vn/hotel/search?spec={date_str}.1.1.HOTEL_GEO.{code1}.{query_city}.1"
-    except Exception:
-        return "https://www.google.com"
+    except Exception as e:
+        logger.error(f"Lỗi generate_direct_links: {e}")
+        return "https://www.traveloka.com"
 
 # ═════════════════════════════════════════════════════════════
 #  HỆ THỐNG QUÉT TỰ ĐỘNG NGẦM
 # ═════════════════════════════════════════════════════════════
 def run_flight_scan(cfg):
     flights = []
-    base_price = 1800000 if (cfg["origin"] in ["SGN", "HAN"] and cfg["destination"] in ["SGN", "HAN"]) else 1100000
+    base_price = 1400000 if (cfg["origin"] in ["SGN", "HAN"] and cfg["destination"] in ["SGN", "HAN"]) else 900000
     all_airlines = [{"name": "VietJet Air", "code": "VJ"}, {"name": "Vietnam Airlines", "code": "VN"}, {"name": "Bamboo Airways", "code": "QH"}]
     random.seed(int(time.time()))
     for airline in all_airlines:
         if cfg["airline"] != "ALL" and airline["code"] != cfg["airline"]: continue
         price = int(base_price + random.randint(50000, 600000))
-        if airline["code"] == "VN": price += 400000
+        if airline["code"] == "VN": price += 300000
         hour = random.randint(5, 22)
         minute = random.choice([0, 15, 30, 45])
         flights.append({
@@ -262,7 +261,7 @@ AUTH_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN CHÍNH (ĐÃ THAY ĐỔI Ô NHẬP THÀNH MENU CHỌN SÂN BAY)
+#  GIAO DIỆN CHÍNH
 # ═════════════════════════════════════════════════════════════
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -554,7 +553,6 @@ def logout():
 @app.route("/")
 def index():
     if not is_logged_in(): return redirect(url_for("login"))
-    # Truyền danh sách sân bay AIRPORTS vào giao diện HTML
     return render_template_string(HTML_TEMPLATE, username=session["user"], airports=AIRPORTS)
 
 @app.route("/api/change-password", methods=["POST"])
