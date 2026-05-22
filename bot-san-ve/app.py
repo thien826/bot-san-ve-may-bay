@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
-║   FLIGHT & HOTEL HUNTER — Full Account Management            ║
-║   ĐÃ FIX: Lỗi click link ĐẶT VÉ NGAY bị về Google.com        ║
+║   FLIGHT & HOTEL HUNTER PRO — Responsive Edition             ║
+║   Hỗ trợ tối ưu hiển thị hoàn hảo trên cả Laptop & Mobile    ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -30,18 +30,18 @@ logger = logging.getLogger(__name__)
 DATA_FILE = "premium_hunter_data.json"
 
 AIRPORTS = [
-    {"code": "SGN", "name": "SGN - TP. Hồ Chí Minh"},
-    {"code": "HAN", "name": "HAN - Hà Nội"},
-    {"code": "DAD", "name": "DAD - Đà Nẵng"},
-    {"code": "CXR", "name": "CXR - Nha Trang"},
-    {"code": "PQC", "name": "PQC - Phú Quốc"},
-    {"code": "VCA", "name": "VCA - Cần Thơ"},
-    {"code": "HPH", "name": "HPH - Hải Phòng"},
-    {"code": "VII", "name": "VII - Vinh"},
-    {"code": "HUI", "name": "HUI - Huế"},
-    {"code": "BMV", "name": "BMV - Buôn Ma Thuột"},
-    {"code": "VCL", "name": "VCL - Chu Lai"},
-    {"code": "UIH", "name": "UIH - Quy Nhơn"}
+    {"code": "SGN", "name": "SGN — TP. Hồ Chí Minh"},
+    {"code": "HAN", "name": "HAN — Hà Nội"},
+    {"code": "DAD", "name": "DAD — Đà Nẵng"},
+    {"code": "CXR", "name": "CXR — Nha Trang"},
+    {"code": "PQC", "name": "PQC — Phú Quốc"},
+    {"code": "VCA", "name": "VCA — Cần Thơ"},
+    {"code": "HPH", "name": "HPH — Hải Phòng"},
+    {"code": "VII", "name": "VII — Vinh"},
+    {"code": "HUI", "name": "HUI — Huế"},
+    {"code": "BMV", "name": "BMV — Buôn Ma Thuột"},
+    {"code": "VCL", "name": "VCL — Chu Lai"},
+    {"code": "UIH", "name": "UIH — Quy Nhơn"}
 ]
 
 # ═════════════════════════════════════════════════════════════
@@ -92,14 +92,13 @@ def add_log(message: str, log_type: str = "info"):
     save_data_permanently()
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG (ĐÃ SỬA LỖI ĐỊNH DẠNG NGÀY)
+#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG
 # ═════════════════════════════════════════════════════════════
 def generate_direct_links(type_search: str, item_name: str, code1: str, code2: str, date_str: str) -> str:
     try:
         if type_search == "flight":
             if date_str and "-" in date_str:
                 parts = date_str.split("-")
-                # ĐÃ SỬA: Kiểm tra độ dài phần tử đầu tiên chính xác (Ví dụ: '2026' có độ dài là 4)
                 if len(parts[0]) == 4:
                     date_formatted = f"{parts[2]}-{parts[1]}-{parts[0]}"
                 else:
@@ -182,7 +181,7 @@ def execute_scan(force_notify: bool = False):
             add_log(f"Quét thành công! Vé {cfg['origin']}➔{cfg['destination']}: {cheapest_flight['price']:,} ₫", "success")
             if cheapest_flight["price"] <= int(cfg["threshold"]) or force_notify:
                 state["stats"]["alert_count"] += 1
-                msg = f"✈️ <b>FLIGHT HUNTER - GIÁ VÉ RẺ</b>\n\n📍 Chặng: {cfg['origin']} ➔ {cfg['destination']}\n📅 Ngày: {cfg['fly_date']}\n💵 Giá: <b>{cheapest_flight['price']:,} ₫</b>\n👑 Hãng: {cheapest_flight['airline']}\n\n👉 <a href='{cheapest_flight['link']}'>ĐẶT VÉ NGAY</a>"
+                msg = f"✈️ <b>FLIGHT HUNTER — GIÁ VÉ RẺ</b>\n\n📍 Chặng: {cfg['origin']} ➔ {cfg['destination']}\n📅 Ngày: {cfg['fly_date']}\n💵 Giá: <b>{cheapest_flight['price']:,} ₫</b>\n👑 Hãng: {cheapest_flight['airline']}\n\n👉 <a href='{cheapest_flight['link']}'>ĐẶT VÉ NGAY</a>"
                 requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"}, timeout=8)
     except Exception as e:
         add_log(f"Lỗi quét tự động: {str(e)}", "error")
@@ -202,7 +201,7 @@ def update_scheduler_interval(minutes: int):
 update_scheduler_interval(state["config"]["interval"])
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN AUTH
+#  GIAO DIỆN AUTH (LOGIN / REGISTER)
 # ═════════════════════════════════════════════════════════════
 AUTH_TEMPLATE = """
 <!DOCTYPE html>
@@ -261,7 +260,7 @@ AUTH_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN CHÍNH
+#  GIAO DIỆN CHÍNH (ĐÃ LÀM RESPONSIVE LAPTOP & MOBILE)
 # ═════════════════════════════════════════════════════════════
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -274,50 +273,68 @@ HTML_TEMPLATE = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body { background-color: #f3f4f6; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 40px; }
+        
+        /* HEADER PREMIUM */
         .header-premium { background: linear-gradient(180deg, #0f292f 0%, #183e46 100%); color: white; padding: 25px 20px 45px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; position: relative; text-align: center; }
         .header-title { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .header-sub { font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 20px; font-weight: 700; display: inline-block; margin-top: 8px; border: 1px solid rgba(16, 185, 129, 0.3); }
         .main-title-large { font-size: 1.8rem; font-weight: 800; margin: 20px 0 10px 0; }
         
-        .tab-nav-container { display: flex; background: rgba(255,255,255,0.1); border-radius: 12px; margin: 20px auto 0 auto; max-width: 350px; padding: 4px; }
-        .tab-btn { flex: 1; background: transparent; border: none; color: #9ca3af; padding: 8px; font-weight: 700; font-size: 0.8rem; border-radius: 10px; }
+        /* NAVIGATION TABS */
+        .tab-nav-container { display: flex; background: rgba(255,255,255,0.1); border-radius: 12px; margin: 20px auto 0 auto; max-width: 450px; padding: 4px; }
+        .tab-btn { flex: 1; background: transparent; border: none; color: #9ca3af; padding: 10px; font-weight: 700; font-size: 0.85rem; border-radius: 10px; transition: all 0.2s ease; }
         .tab-btn.active { background: #10b981; color: white; }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 360px; margin: -25px auto 20px auto; padding: 0 20px; position: relative; z-index: 10; }
+        /* GRID STATS & BOT */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 1200px; margin: -25px auto 20px auto; padding: 0 15px; position: relative; z-index: 10; }
         .stat-box-tv { background: white; border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
         .stat-val-tv { font-size: 1.6rem; font-weight: 800; color: #111827; }
         .stat-lbl-tv { font-size: 0.75rem; color: #6b7280; font-weight: 500; }
 
-        .bot-status-card { background: white; border-radius: 16px; padding: 14px 20px; max-width: 360px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+        .bot-status-card { background: white; border-radius: 16px; padding: 14px 20px; max-width: 1170px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; display: inline-block; margin-right: 6px; }
         .status-dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
 
-        .config-card-tv { background: white; border-radius: 20px; padding: 22px; max-width: 360px; margin: 0 auto 25px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
-        .section-title-tv { font-size: 0.85rem; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+        /* RESPONSIVE LAYOUT CONTEXT CORE */
+        .workspace-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
         
-        .input-group-tv { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
+        @media (min-width: 992px) {
+            .workspace-grid { grid-template-columns: 4.5fr 7.5fr; }
+        }
+
+        /* CONFIGURATION CARD COMPONENTS */
+        .config-card-tv { background: white; border-radius: 20px; padding: 22px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; height: fit-content; }
+        .section-title-tv { font-size: 0.9rem; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; }
+        
+        .input-group-tv { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 8px 12px; margin-bottom: 14px; }
         .input-group-tv label { font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-bottom: 2px; display: block; }
         .input-group-tv select, .input-group-tv input { background: transparent; border: none; width: 100%; font-weight: 600; color: #111827; font-size: 0.95rem; }
         .input-group-tv select:focus, .input-group-tv input:focus { outline: none; }
 
-        .btn-tv-apply { background: #10b981; color: white; border-radius: 12px; padding: 14px; font-weight: 700; border: none; width: 100%; display: block; margin-bottom: 10px; }
-        .btn-tv-sub { background: #f3f4f6; color: #374151; font-weight: 600; font-size: 0.85rem; padding: 10px; border-radius: 10px; border: none; width: 100%; }
-        .btn-tv-delete { background: #fee2e2; color: #ef4444; font-weight: 600; font-size: 0.85rem; padding: 10px; border-radius: 10px; border: none; width: 100%; }
+        /* BUTTON ACTIONS */
+        .btn-tv-apply { background: #10b981; color: white; border-radius: 12px; padding: 14px; font-weight: 700; border: none; width: 100%; display: block; margin-bottom: 10px; transition: background 0.2s; }
+        .btn-tv-apply:hover { background: #059669; }
+        .btn-tv-sub { background: #f3f4f6; color: #374151; font-weight: 600; font-size: 0.85rem; padding: 11px; border-radius: 10px; border: none; width: 100%; transition: background 0.2s; }
+        .btn-tv-sub:hover { background: #e5e7eb; }
+        .btn-tv-delete { background: #fee2e2; color: #ef4444; font-weight: 600; font-size: 0.85rem; padding: 11px; border-radius: 10px; border: none; width: 100%; transition: background 0.2s; }
+        .btn-tv-delete:hover { background: #fca5a5; }
 
-        .box-title-header { font-size: 0.85rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 10px; padding: 0 4px; }
-        .item-card-tv { background: white; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e5e7eb; }
-        .item-link-btn { background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; text-decoration: none; }
+        /* PANELS CONTAINER VISUAL */
+        .box-title-header { font-size: 0.85rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 10px; padding: 0 4px; display: flex; align-items: center; gap: 6px; }
+        .item-card-tv { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e5e7eb; box-shadow: 0 2px 6px rgba(0,0,0,0.01); }
+        .item-link-btn { background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 8px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; }
+        .item-link-btn:hover { background: #2563eb; color: white; text-decoration: none; }
         
-        .console-box-tv { background: white; border-radius: 14px; padding: 14px; height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; border: 1px solid #e5e7eb; }
-        .log-row-tv { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; }
+        .console-box-tv { background: white; border-radius: 14px; padding: 14px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; border: 1px solid #e5e7eb; }
+        .log-row-tv { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; }
     </style>
 </head>
 <body>
 
 <div class="header-premium">
-    <div class="header-title"><i class="fas fa-paper-plane" style="color:#10b981;"></i> Flight Hunter</div>
-    <div class="header-sub">Chào, <span class="text-white font-weight-bold">{{ username }}</span> 👋</div>
-    <div class="main-title-large">Săn Vé Thông Minh</div>
+    <div class="header-title"><i class="fas fa-paper-plane" style="color:#10b981;"></i> Flight Hunter Pro</div>
+    <div class="header-sub">Tài khoản: <span class="text-white font-weight-bold">{{ username }}</span> 🟢</div>
+    <div class="main-title-large">Hệ Thống Quét Realtime</div>
 
     <div class="tab-nav-container">
         <button id="tab-flight" class="tab-btn active" onclick="switchTab('flight')"><i class="fas fa-plane"></i> Vé Máy Bay</button>
@@ -327,90 +344,95 @@ HTML_TEMPLATE = """
 </div>
 
 <div class="stats-grid">
-    <div class="stat-box-tv"><div id="lbl-stat-1" class="stat-val-tv">0</div><div class="stat-lbl-tv">Lần đã quét</div></div>
-    <div class="stat-box-tv"><div id="lbl-stat-2" class="stat-val-tv">0</div><div class="stat-lbl-tv">Cảnh báo gửi</div></div>
+    <div class="stat-box-tv"><div id="lbl-stat-1" class="stat-val-tv">0</div><div class="stat-lbl-tv">Tổng số lần đã quét</div></div>
+    <div class="stat-box-tv"><div id="lbl-stat-2" class="stat-val-tv">0</div><div class="stat-lbl-tv">Cảnh báo gửi Telegram</div></div>
 </div>
 
 <div class="bot-status-card">
-    <span class="font-weight-bold text-secondary" style="font-size:0.85rem;"><i class="fas fa-robot text-muted mr-1"></i> TRẠNG THÁI BOT</span>
+    <span class="font-weight-bold text-secondary" style="font-size:0.85rem;"><i class="fas fa-robot text-muted mr-1"></i> TRẠNG THÁI HOẠT ĐỘNG HOÀN CẢNH</span>
     <span id="bot-status-lbl" class="badge badge-light py-2 px-3 text-muted" style="border-radius:12px; font-weight:700;">Đang nghỉ</span>
 </div>
 
-<div class="container px-3">
+<div class="workspace-grid">
     
-    <div id="panel-flight" class="config-card-tv">
-        <div class="section-title-tv"><i class="fas fa-sliders-h" style="color:#10b981;"></i> Theo dõi máy bay</div>
-        
-        <div class="row no-gutters">
-            <div class="col-6 pr-1">
-                <div class="input-group-tv">
-                    <label>🛫 ĐIỂM ĐI</label>
-                    <select id="origin">
-                        {% for ap in airports %}
-                        <option value="{{ ap.code }}">{{ ap.name }}</option>
-                        {% endfor %}
-                    </select>
+    <div>
+        <div id="panel-flight" class="config-card-tv">
+            <div class="section-title-tv"><i class="fas fa-sliders-h" style="color:#10b981;"></i> Bộ lọc vé máy bay</div>
+            
+            <div class="row no-gutters">
+                <div class="col-6 pr-1">
+                    <div class="input-group-tv">
+                        <label>🛫 ĐIỂM ĐI (IATA)</label>
+                        <select id="origin">
+                            {% for ap in airports %}
+                            <option value="{{ ap.code }}">{{ ap.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6 pl-1">
+                    <div class="input-group-tv">
+                        <label>🛬 ĐIỂM ĐẾN (IATA)</label>
+                        <select id="destination">
+                            {% for ap in airports %}
+                            <option value="{{ ap.code }}">{{ ap.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="col-6 pl-1">
-                <div class="input-group-tv">
-                    <label>🛬 ĐIỂM ĐẾN</label>
-                    <select id="destination">
-                        {% for ap in airports %}
-                        <option value="{{ ap.code }}">{{ ap.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+
+            <div class="input-group-tv"><label>📅 NGÀY KHỞI HÀNH</label><input type="date" id="fly_date"></div>
+            <div class="input-group-tv">
+                <label>👑 HÃNG BAY ƯU TIÊN</label>
+                <select id="airline">
+                    <option value="ALL">Tất cả các hãng hàng không</option>
+                    <option value="VJ">VietJet Air</option>
+                    <option value="VN">Vietnam Airlines</option>
+                    <option value="QH">Bamboo Airways</option>
+                </select>
             </div>
+            <div class="input-group-tv"><label>💰 GIÁ TRẦN KỲ VỌNG (VNĐ)</label><input type="number" id="threshold"></div>
+            <div class="input-group-tv">
+                <label>⏱️ CHU KỲ TỰ ĐỘNG QUÈT</label>
+                <select id="interval"><option value="5">Quét mỗi 5 phút</option><option value="15">Quét mỗi 15 phút</option><option value="30">Quét mỗi 30 phút</option></select>
+            </div>
+            <div class="d-flex justify-content-between align-items-center my-3 px-1">
+                <span class="small font-weight-bold text-secondary">Kích hoạt tiến trình chạy ngầm</span>
+                <input type="checkbox" id="is_active" style="width:22px; height:22px; accent-color:#10b981; cursor:pointer;">
+            </div>
+            <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-save"></i> Áp Dụng & Lưu Lại</button>
+            <button class="btn-tv-sub mb-2" onclick="scanNow()"><i class="fas fa-sync"></i> Thực thi quét khẩn cấp</button>
+            <button class="btn-tv-delete" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Làm sạch lịch sử dữ liệu</button>
         </div>
 
-        <div class="input-group-tv"><label>📅 NGÀY BAY</label><input type="date" id="fly_date"></div>
-        <div class="input-group-tv">
-            <label>👑 HÃNG BAY ƯU TIÊN</label>
-            <select id="airline">
-                <option value="ALL">Tất cả các hãng</option>
-                <option value="VJ">VietJet Air</option>
-                <option value="VN">Vietnam Airlines</option>
-                <option value="QH">Bamboo Airways</option>
-            </select>
+        <div id="panel-hotel" class="config-card-tv" style="display:none;">
+            <div class="section-title-tv"><i class="fas fa-hotel" style="color:#10b981;"></i> Bộ lọc phòng khách sạn</div>
+            <div class="input-group-tv"><label>📍 THÀNH PHỐ / KHU VỰC KHẢO SÁT</label><input type="text" id="hotel_city"></div>
+            <div class="input-group-tv"><label>💰 GIÁ PHÒNG TỐI ĐA (/ĐÊM)</label><input type="number" id="hotel_threshold"></div>
+            <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-check-circle"></i> Đồng bộ bộ lọc phòng</button>
         </div>
-        <div class="input-group-tv"><label>💰 GIÁ KỲ VỌNG</label><input type="number" id="threshold"></div>
-        <div class="input-group-tv">
-            <label>⏱️ CHU KỲ QUÉT (PHÚT)</label>
-            <select id="interval"><option value="5">5 phút</option><option value="15">15 phút</option><option value="30">30 phút</option></select>
+
+        <div id="panel-account" class="config-card-tv" style="display:none;">
+            <div class="section-title-tv"><i class="fas fa-lock" style="color:#10b981;"></i> Đổi mật khẩu đăng nhập</div>
+            <div class="input-group-tv"><label>MẬT KHẨU HIỆN TẠI</label><input type="password" id="old_password" placeholder="Xác thực mật khẩu cũ..."></div>
+            <div class="input-group-tv"><label>MẬT KHẨU MỚI</label><input type="password" id="new_password" placeholder="Nhập chuỗi mật khẩu mới..."></div>
+            <button class="btn-tv-apply" style="background:#0284c7;" onclick="changePassword()"><i class="fas fa-key"></i> Xác Nhận Cập Nhật</button>
         </div>
-        <div class="d-flex justify-content-between align-items-center my-3 px-1">
-            <span class="small font-weight-bold text-secondary">Kích hoạt chạy ngầm</span>
-            <input type="checkbox" id="is_active" style="width:20px; height:20px; accent-color:#10b981;">
-        </div>
-        <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-save"></i> Lưu Cấu Hình</button>
-        <button class="btn-tv-sub mb-2" onclick="scanNow()"><i class="fas fa-sync"></i> Quét khẩn cấp</button>
-        <button class="btn-tv-delete" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Xóa lịch sử</button>
     </div>
 
-    <div id="panel-hotel" class="config-card-tv" style="display:none;">
-        <div class="section-title-tv"><i class="fas fa-hotel" style="color:#10b981;"></i> Săn phòng khách sạn</div>
-        <div class="input-group-tv"><label>📍 THÀNH PHỐ / KHU VỰC</label><input type="text" id="hotel_city"></div>
-        <div class="input-group-tv"><label>💰 GIÁ PHÒNG TRẦN MONG MUỐN (/ĐÊM)</label><input type="number" id="hotel_threshold"></div>
-        <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-check-circle"></i> Áp dụng bộ lọc phòng</button>
-    </div>
-
-    <div id="panel-account" class="config-card-tv" style="display:none;">
-        <div class="section-title-tv"><i class="fas fa-lock" style="color:#10b981;"></i> Đổi mật khẩu tài khoản</div>
-        <div class="input-group-tv"><label>MẬT KHẨU CŨ KHAI BÁO</label><input type="password" id="old_password" placeholder="Nhập mật khẩu hiện tại..."></div>
-        <div class="input-group-tv"><label>MẬT KHẨU MỚI MUỐN ĐỔI</label><input type="password" id="new_password" placeholder="Nhập mật khẩu mới..."></div>
-        <button class="btn-tv-apply" style="background:#0284c7;" onclick="changePassword()"><i class="fas fa-key"></i> XÁC NHẬN ĐỔI MẬT KHẨU</button>
-    </div>
-
-    <div class="mx-auto" style="max-width:360px;">
-        <div class="box-title-header"><i class="fas fa-list-ul"></i> Kết quả tìm kiếm</div>
+    <div>
+        <div class="box-title-header"><i class="fas fa-list-ul"></i> Danh sách kết quả tìm kiếm mới nhất</div>
         <div id="results-box-tv"></div>
 
-        <div class="box-title-header mt-4"><i class="fas fa-history"></i> Nhật ký hoạt động</div>
+        <div class="box-title-header mt-4"><i class="fas fa-history"></i> Nhật ký vận hành hệ thống</div>
         <div id="logs-box-tv" class="console-box-tv"></div>
         
-        <div class="text-center mt-3"><a href="/logout" class="btn btn-sm text-danger font-weight-bold small"><i class="fas fa-sign-out-alt"></i> ĐĂNG XUẤT HỆ THỐNG</a></div>
+        <div class="text-center mt-4">
+            <a href="/logout" class="btn btn-sm text-danger font-weight-bold small"><i class="fas fa-sign-out-alt"></i> ĐĂNG XUẤT KHỎI HỆ THỐNG THIẾT BỊ</a>
+        </div>
     </div>
+
 </div>
 
 <script>
@@ -446,10 +468,10 @@ HTML_TEMPLATE = """
 
             let statusLbl = document.getElementById('bot-status-lbl');
             if(data.config.is_active){
-                statusLbl.innerHTML = '<span class="status-dot active"></span>Đang quét tự động';
+                statusLbl.innerHTML = '<span class="status-dot active"></span>Đang tự động quét ngầm dữ liệu';
                 statusLbl.className = "badge badge-success py-2 px-3 text-white";
             } else {
-                statusLbl.innerHTML = '<span class="status-dot"></span>Đang nghỉ';
+                statusLbl.innerHTML = '<span class="status-dot"></span>Hệ thống đang tạm nghỉ';
                 statusLbl.className = "badge badge-light py-2 px-3 text-muted";
             }
 
@@ -461,16 +483,16 @@ HTML_TEMPLATE = """
                 resBox.innerHTML = data.results.map(f => `
                     <div class="item-card-tv">
                         <div><div class="font-weight-bold">${f.airline}</div><small class="text-muted">${f.time_window}</small></div>
-                        <div class="text-right"><div class="font-weight-bold text-success">${f.price.toLocaleString()} ₫</div><a href="${f.link}" target="_blank" class="item-link-btn">ĐẶT HÃNG</a></div>
+                        <div class="text-right"><div class="font-weight-bold text-success" style="font-size:1.1rem;">${f.price.toLocaleString()} ₫</div><a href="${f.link}" target="_blank" class="item-link-btn"><i class="fas fa-shopping-cart"></i> ĐẶT VÉ</a></div>
                     </div>
-                `).join('') || '<div class="text-center text-muted py-3 small">Không có dữ liệu vé bay.</div>';
+                `).join('') || '<div class="text-center text-muted py-4 card border-0 small">Chưa có dữ liệu vé bay — bật theo dõi hoặc bấm Quét ngay.</div>';
             } else if (currentTab === "hotel") {
                 resBox.innerHTML = data.hotel_results.map(h => `
                     <div class="item-card-tv">
-                        <div><div class="font-weight-bold text-truncate" style="max-width:180px;">${h.name}</div><small class="text-muted">${h.room}</small></div>
-                        <div class="text-right"><div class="font-weight-bold text-warning">${h.price.toLocaleString()} ₫</div><a href="${h.link}" target="_blank" class="item-link-btn" style="color:#eab308;">ĐẶT PHÒNG</a></div>
+                        <div><div class="font-weight-bold text-truncate" style="max-width:260px;">${h.name}</div><small class="text-muted">${h.room}</small></div>
+                        <div class="text-right"><div class="font-weight-bold text-warning" style="font-size:1.1rem;">${h.price.toLocaleString()} ₫</div><a href="${h.link}" target="_blank" class="item-link-btn" style="color:#eab308; background:#fef08a;"><i class="fas fa-bed"></i> ĐẶT PHÒNG</a></div>
                     </div>
-                `).join('') || '<div class="text-center text-muted py-3 small">Không có dữ liệu phòng nghỉ.</div>';
+                `).join('') || '<div class="text-center text-muted py-4 card border-0 small">Không có dữ liệu phòng nghỉ phù hợp.</div>';
             }
         });
     }
@@ -483,13 +505,13 @@ HTML_TEMPLATE = """
             airline: document.getElementById('airline').value, hotel_city: document.getElementById('hotel_city').value,
             hotel_threshold: document.getElementById('hotel_threshold').value
         };
-        fetch('/api/config', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }).then(() => { alert("⚙️ Đã lưu cấu hình thành công!"); loadState(); });
+        fetch('/api/config', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }).then(() => { alert("⚙️ Lưu cấu hình đồng bộ thành công!"); loadState(); });
     }
 
     function changePassword() {
         let old_p = document.getElementById('old_password').value;
         let new_p = document.getElementById('new_password').value;
-        if(!old_p || !new_p) { alert("Vui lòng điền đủ thông tin mật khẩu!"); return; }
+        if(!old_p || !new_p) { alert("Vui lòng nhập đầy đủ chuỗi ký tự mật khẩu!"); return; }
         fetch('/api/change-password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -503,7 +525,7 @@ HTML_TEMPLATE = """
         });
     }
 
-    function scanNow() { fetch('/api/scan-now', { method: 'POST' }).then(() => { alert("🔍 Kích hoạt lệnh quét khẩn cấp!"); loadState(); }); }
+    function scanNow() { fetch('/api/scan-now', { method: 'POST' }).then(() => { alert("🔍 Đang phát lệnh quét cưỡng bức!"); loadState(); }); }
     function clearLogs() { fetch('/api/clear-logs', { method: 'POST' }).then(() => loadState()); }
 
     setInterval(loadState, 4000);
@@ -514,7 +536,7 @@ HTML_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  CÁC ROUTE ĐIỀU HƯỚNG
+#  CÁC ROUTE ĐIỀU HƯỚNG ROUTING CONTROL
 # ═════════════════════════════════════════════════════════════
 def is_logged_in():
     return "user" in session
@@ -527,7 +549,7 @@ def login():
         if username in state["users"] and state["users"][username] == password:
             session["user"] = username
             return redirect(url_for("index"))
-        return render_template_string(AUTH_TEMPLATE, is_register=False, message="⚠️ Tên tài khoản hoặc mật khẩu không đúng!", is_error=True)
+        return render_template_string(AUTH_TEMPLATE, is_register=False, message="⚠️ Tài khoản đăng nhập hoặc mật khẩu không khớp!", is_error=True)
     return render_template_string(AUTH_TEMPLATE, is_register=False, message=None)
 
 @app.route("/register", methods=["GET", "POST"])
@@ -536,13 +558,13 @@ def register():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
         if not username or not password:
-            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Không được để trống dữ liệu!", is_error=True)
+            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Vui lòng điền thông tin hợp lệ!", is_error=True)
         if username in state["users"]:
-            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Tên tài khoản này đã được đăng ký!", is_error=True)
+            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Tên tài khoản quản trị đã tồn tại!", is_error=True)
         
         state["users"][username] = password
         save_data_permanently()
-        return render_template_string(AUTH_TEMPLATE, is_register=False, message="🎉 Đăng ký thành công! Hãy đăng nhập.", is_error=False)
+        return render_template_string(AUTH_TEMPLATE, is_register=False, message="🎉 Tạo tài khoản thành công! Hãy tiến hành đăng nhập.", is_error=False)
     return render_template_string(AUTH_TEMPLATE, is_register=True, message=None)
 
 @app.route("/logout")
@@ -564,12 +586,12 @@ def api_change_password():
     new_p = data.get("new_password", "").strip()
     
     if state["users"].get(current_user) != old_p:
-        return jsonify({"ok": False, "msg": "❌ Mật khẩu cũ không chính xác!"})
+        return jsonify({"ok": False, "msg": "❌ Mật khẩu cũ cung cấp không khớp!"})
     
     state["users"][current_user] = new_p
     save_data_permanently()
-    add_log(f"Tài khoản [{current_user}] vừa cập nhật mật khẩu thành công.", "warning")
-    return jsonify({"ok": True, "msg": "✅ Đổi mật khẩu thành công và đã được lưu!"})
+    add_log(f"Quản trị viên [{current_user}] đổi mật khẩu bảo mật.", "warning")
+    return jsonify({"ok": True, "msg": "✅ Cập nhật mật khẩu tài khoản mới thành công!"})
 
 @app.route("/api/state")
 def api_get_state():
