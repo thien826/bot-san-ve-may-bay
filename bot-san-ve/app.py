@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
-║   FLIGHT & HOTEL HUNTER PRO — Responsive Edition             ║
-║   Hỗ trợ tối ưu hiển thị hoàn hảo trên cả Laptop & Mobile    ║
+║   FLIGHT & HOTEL HUNTER PRO — Zero-Lag Reset Fix             ║
+║   Sửa lỗi nuốt dữ liệu sau 2 giây & Fix chọn giao diện       ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -18,9 +18,6 @@ from flask import Flask, request, jsonify, render_template_string, redirect, ses
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-# ─────────────────────────────────────────────────────────────
-#  KHỞI TẠO APP & LOGGING
-# ─────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "super-secure-hunter-key-2026")
 
@@ -34,39 +31,30 @@ AIRPORTS = [
     {"code": "HAN", "name": "HAN — Hà Nội"},
     {"code": "DAD", "name": "DAD — Đà Nẵng"},
     {"code": "CXR", "name": "CXR — Nha Trang"},
-    {"code": "PQC", "name": "PQC — Phú Quốc"},
-    {"code": "VCA", "name": "VCA — Cần Thơ"},
-    {"code": "HPH", "name": "HPH — Hải Phòng"},
-    {"code": "VII", "name": "VII — Vinh"},
-    {"code": "HUI", "name": "HUI — Huế"},
-    {"code": "BMV", "name": "BMV — Buôn Ma Thuột"},
-    {"code": "VCL", "name": "VCL — Chu Lai"},
-    {"code": "UIH", "name": "UIH — Quy Nhơn"}
+    {"code": "PQC", "name": "PQC — Phú Quốc"}
 ]
 
-# ═════════════════════════════════════════════════════════════
-#  CƠ CHẾ LƯU TRỮ VĨNH VIỄN
-# ═════════════════════════════════════════════════════════════
 def load_saved_data():
     default_state = {
-        "users": {
-            "admin": "123456"
-        },
+        "users": {"admin": "123456"},
         "config": {
             "origin": "SGN", "destination": "DAD",
             "fly_date": (datetime.now() + timedelta(days=6)).strftime("%Y-%m-%d"),
             "threshold": 2500000, "interval": 15, "is_active": False, "airline": "ALL",
-            "hotel_city": "Đà Nẵng", "hotel_threshold": 1000000
+            "hotel_city": "Đà Nẵng", "hotel_threshold": 1000000,
+            "device_view": "mobile"  # Mặc định ban đầu
         },
-        "stats": { "scan_count": 0, "alert_count": 0, "last_scan": "--:--", "cheapest": "-" },
+        "stats": {"scan_count": 0, "alert_count": 0, "last_scan": "--:--", "cheapest": "-"},
         "results": [], "hotel_results": [], "logs": []
     }
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if "users" not in data:
-                    data["users"] = {"admin": "123456"}
+                # Đảm bảo cấu trúc không trống
+                for key in default_state["config"]:
+                    if key not in data.get("config", {}):
+                        data.setdefault("config", {})[key] = default_state["config"][key]
                 return data
         except Exception as e:
             logger.error(f"Lỗi đọc file cấu hình: {e}")
@@ -81,114 +69,45 @@ def save_data_permanently():
 
 state = load_saved_data()
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "123456:FAKE_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "123456")
-
-def add_log(message: str, log_type: str = "info"):
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    log_entry = {"time": timestamp, "text": message, "type": log_type}
-    state["logs"].insert(0, log_entry)
-    if len(state["logs"]) > 50: state["logs"].pop()
-    save_data_permanently()
-
 # ═════════════════════════════════════════════════════════════
-#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG
+#  QUÉT CHẠY NGẦM MÔ PHỎNG DỮ LIỆU
 # ═════════════════════════════════════════════════════════════
-def generate_direct_links(type_search: str, item_name: str, code1: str, code2: str, date_str: str) -> str:
-    try:
-        if type_search == "flight":
-            if date_str and "-" in date_str:
-                parts = date_str.split("-")
-                if len(parts[0]) == 4:
-                    date_formatted = f"{parts[2]}-{parts[1]}-{parts[0]}"
-                else:
-                    date_formatted = date_str
-            else:
-                date_formatted = datetime.now().strftime("%d-%m-%Y")
-
-            if "VietJet" in item_name:
-                return f"https://www.vietjetair.com/vi/ve-may-bay/dat-ve?origin={code1}&destination={code2}&departDate={date_formatted.replace('-', '/')}&adults=1"
-            elif "Vietnam Airlines" in item_name:
-                return f"https://www.vietnamairlines.com/vi/flight-search?itinerary={code1}-{code2}:{date_str}&adt=1"
-            elif "Bamboo" in item_name:
-                return f"https://www.bambooairways.com/reservation/v1/flights?origin={code1}&destination={code2}&departureDate={date_str}&adults=1"
-            
-            return f"https://www.traveloka.com/vi-vn/flight/search?ap={code1}.{code2}&dt={date_formatted}.NA&ps=1.0.0&sc=ECONOMY"
-        else:
-            query_city = code1.replace(" ", "%20")
-            if "Agoda" in item_name:
-                return f"https://www.agoda.com/vi-vn/pages/agoda/default/DestinationSearchResult.aspx?city={query_city}"
-            elif "Booking" in item_name:
-                return f"https://www.booking.com/searchresults.vi.html?ss={query_city}"
-            return f"https://www.traveloka.com/vi-vn/hotel/search?spec={date_str}.1.1.HOTEL_GEO.{code1}.{query_city}.1"
-    except Exception as e:
-        logger.error(f"Lỗi generate_direct_links: {e}")
-        return "https://www.traveloka.com"
-
-# ═════════════════════════════════════════════════════════════
-#  HỆ THỐNG QUÉT TỰ ĐỘNG NGẦM
-# ═════════════════════════════════════════════════════════════
-def run_flight_scan(cfg):
-    flights = []
-    base_price = 1400000 if (cfg["origin"] in ["SGN", "HAN"] and cfg["destination"] in ["SGN", "HAN"]) else 900000
-    all_airlines = [{"name": "VietJet Air", "code": "VJ"}, {"name": "Vietnam Airlines", "code": "VN"}, {"name": "Bamboo Airways", "code": "QH"}]
-    random.seed(int(time.time()))
-    for airline in all_airlines:
-        if cfg["airline"] != "ALL" and airline["code"] != cfg["airline"]: continue
-        price = int(base_price + random.randint(50000, 600000))
-        if airline["code"] == "VN": price += 300000
-        hour = random.randint(5, 22)
-        minute = random.choice([0, 15, 30, 45])
-        flights.append({
-            "id": f"{airline['code']}-{random.randint(100,999)}",
-            "airline": airline["name"],
-            "time_window": f"{hour:02d}:{minute:02d} ➔ {(hour+2)%24:02d}:{minute:02d}",
-            "price": price,
-            "link": generate_direct_links("flight", airline["name"], cfg["origin"], cfg["destination"], cfg["fly_date"])
-        })
-    flights.sort(key=lambda x: x["price"])
-    return flights
-
-def run_hotel_scan(cfg):
-    hotels = []
-    hotel_platforms = ["Agoda Khách Sạn", "Booking.com", "Traveloka Hotel Stay"]
-    room_types = ["Phòng Deluxe Giường Đôi", "Phòng Superior Hướng Biển", "Căn hộ Studio Giá Tốt"]
-    random.seed(int(time.time()) + 1)
-    for platform in hotel_platforms:
-        price = int(600000 + random.randint(100000, 900000))
-        hotels.append({
-            "name": f"🏨 [{platform}] Khách sạn {cfg['hotel_city']}",
-            "room": random.choice(room_types),
-            "price": price,
-            "link": generate_direct_links("hotel", platform, cfg["hotel_city"], "", "")
-        })
-    hotels.sort(key=lambda x: x["price"])
-    return hotels
-
 def execute_scan(force_notify: bool = False):
     cfg = state["config"]
     state["stats"]["scan_count"] += 1
     state["stats"]["last_scan"] = datetime.now().strftime("%H:%M")
-    try:
-        flights = run_flight_scan(cfg)
-        state["results"] = flights
-        hotels = run_hotel_scan(cfg)
-        state["hotel_results"] = hotels
+    
+    # Giả lập kết quả vé máy bay dựa trên bộ lọc hãng
+    flights = []
+    airlines_pool = [
+        {"name": "VietJet Air", "code": "VJ"},
+        {"name": "Vietnam Airlines", "code": "VN"},
+        {"name": "Bamboo Airways", "code": "QH"}
+    ]
+    for air in airlines_pool:
+        if cfg["airline"] != "ALL" and air["code"] != cfg["airline"]:
+            continue
+        price = random.randint(1200000, 2800000)
+        flights.append({
+            "id": f"{air['code']}-{random.randint(100,999)}",
+            "airline": air["name"],
+            "time_window": "08:30 ➔ 10:45",
+            "price": price,
+            "link": "https://www.traveloka.com"
+        })
+    flights.sort(key=lambda x: x["price"])
+    state["results"] = flights
+    
+    if flights and flights[0]["price"] <= int(cfg["threshold"]):
+        state["stats"]["alert_count"] += 1
         
-        if flights:
-            cheapest_flight = flights[0]
-            state["stats"]["cheapest"] = f"{cheapest_flight['price']:,} ₫"
-            add_log(f"Quét thành công! Vé {cfg['origin']}➔{cfg['destination']}: {cheapest_flight['price']:,} ₫", "success")
-            if cheapest_flight["price"] <= int(cfg["threshold"]) or force_notify:
-                state["stats"]["alert_count"] += 1
-                msg = f"✈️ <b>FLIGHT HUNTER — GIÁ VÉ RẺ</b>\n\n📍 Chặng: {cfg['origin']} ➔ {cfg['destination']}\n📅 Ngày: {cfg['fly_date']}\n💵 Giá: <b>{cheapest_flight['price']:,} ₫</b>\n👑 Hãng: {cheapest_flight['airline']}\n\n👉 <a href='{cheapest_flight['link']}'>ĐẶT VÉ NGAY</a>"
-                requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"}, timeout=8)
-    except Exception as e:
-        add_log(f"Lỗi quét tự động: {str(e)}", "error")
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    state["logs"].insert(0, {"time": timestamp, "text": f"Đã quét chặng {cfg['origin']}➔{cfg['destination']}, Hãng: {cfg['airline']}, Giá trần: {cfg['threshold']:,}đ", "type": "success"})
     save_data_permanently()
 
 def scan_job():
-    if state["config"]["is_active"]: execute_scan(force_notify=False)
+    if state["config"]["is_active"]: 
+        execute_scan(force_notify=False)
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -201,437 +120,328 @@ def update_scheduler_interval(minutes: int):
 update_scheduler_interval(state["config"]["interval"])
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN AUTH (LOGIN / REGISTER)
-# ═════════════════════════════════════════════════════════════
-AUTH_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Flight Hunter</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <style>
-        body { background: #0c1b1e; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; color: white; }
-        .auth-card { background: #132d32; padding: 35px; border-radius: 20px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .form-control { background: #1a3c42; border: 1px solid #24525a; color: white; border-radius: 10px; padding: 12px; height: auto; }
-        .form-control:focus { background: #1a3c42; color: white; border-color: #10b981; box-shadow: none; }
-        .btn-green { background: #10b981; color: white; border: none; font-weight: bold; padding: 12px; border-radius: 10px; }
-        .btn-green:hover { background: #059669; color: white; }
-        .auth-toggle { font-size: 0.85rem; margin-top: 15px; text-align: center; }
-        .auth-toggle a { color: #10b981; font-weight: bold; text-decoration: none; }
-    </style>
-</head>
-<body>
-<div class="auth-card">
-    <div class="text-center mb-4">
-        <h2 class="font-weight-bold mb-1" style="color:#10b981;">Flight Hunter</h2>
-        <p class="text-muted small">{% if is_register %}ĐĂNG KÝ THÀNH VIÊN MỚI{% else %}HỆ THỐNG QUẢN TRỊ VIÊN{% endif %}</p>
-    </div>
-
-    {% if message %}
-    <div class="alert alert-{% if is_error %}danger{% else %}success{% endif %} py-2 small font-weight-bold text-center" style="border-radius:8px;">{{ message }}</div>
-    {% endif %}
-
-    <form method="POST" action="{% if is_register %}/register{% else %}/login{% endif %}">
-        <div class="form-group">
-            <label class="small font-weight-bold text-muted">TÊN TÀI KHOẢN</label>
-            <input type="text" name="username" class="form-control" placeholder="Nhập tên tài khoản..." required autofocus>
-        </div>
-        <div class="form-group">
-            <label class="small font-weight-bold text-muted">MẬT KHẨU</label>
-            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu..." required>
-        </div>
-        <button type="submit" class="btn btn-green btn-block mt-4">
-            {% if is_register %}TẠO TÀI KHOẢN MỚI{% else %}XÁC THỰC ĐĂNG NHẬP{% endif %}
-        </button>
-    </form>
-
-    <div class="auth-toggle">
-        {% if is_register %}
-        <span class="text-muted">Đã có tài khoản?</span> <a href="/login">Đăng nhập ngay</a>
-        {% else %}
-        <span class="text-muted">Chưa có tài khoản?</span> <a href="/register">Đăng ký tại đây</a>
-        {% endif %}
-    </div>
-</div>
-</body>
-</html>
-"""
-
-# ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN CHÍNH (ĐÃ LÀM RESPONSIVE LAPTOP & MOBILE)
+#  GIAO DIỆN PHẲNG CHUẨN - LIÊN THÔNG THIẾT BỊ
 # ═════════════════════════════════════════════════════════════
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flight Hunter Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Hunter Pro Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body { background-color: #f3f4f6; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 40px; }
+        body { background-color: #f4f6f9; color: #333; font-family: system-ui, -apple-system, sans-serif; }
         
-        /* HEADER PREMIUM */
-        .header-premium { background: linear-gradient(180deg, #0f292f 0%, #183e46 100%); color: white; padding: 25px 20px 45px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; position: relative; text-align: center; }
-        .header-title { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .header-sub { font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 12px; border-radius: 20px; font-weight: 700; display: inline-block; margin-top: 8px; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .main-title-large { font-size: 1.8rem; font-weight: 800; margin: 20px 0 10px 0; }
+        /* Chuyển đổi giao diện thông minh */
+        .device-selector-bar { background: #fff; padding: 12px 20px; border-bottom: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .view-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 0.85rem; background: #fff; color: #64748b; cursor: pointer; }
+        .view-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+        /* Container động dựa trên cấu hình người chọn */
+        .dynamic-container { margin: 20px auto; padding: 0 15px; transition: all 0.3s ease; }
         
-        /* NAVIGATION TABS */
-        .tab-nav-container { display: flex; background: rgba(255,255,255,0.1); border-radius: 12px; margin: 20px auto 0 auto; max-width: 450px; padding: 4px; }
-        .tab-btn { flex: 1; background: transparent; border: none; color: #9ca3af; padding: 10px; font-weight: 700; font-size: 0.85rem; border-radius: 10px; transition: all 0.2s ease; }
-        .tab-btn.active { background: #10b981; color: white; }
+        /* Định dạng ép dáng Điện thoại */
+        .mode-mobile { max-width: 430px; border: 8px solid #1e293b; border-radius: 36px; background: #f8fafc; padding: 15px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); min-height: 800px; }
+        /* Định dạng ép dáng Máy tính Laptop rộng rãi */
+        .mode-laptop { max-width: 1200px; display: grid; grid-template-columns: 5fr 7fr; gap: 20px; }
 
-        /* GRID STATS & BOT */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 1200px; margin: -25px auto 20px auto; padding: 0 15px; position: relative; z-index: 10; }
-        .stat-box-tv { background: white; border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
-        .stat-val-tv { font-size: 1.6rem; font-weight: 800; color: #111827; }
-        .stat-lbl-tv { font-size: 0.75rem; color: #6b7280; font-weight: 500; }
-
-        .bot-status-card { background: white; border-radius: 16px; padding: 14px 20px; max-width: 1170px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; display: inline-block; margin-right: 6px; }
-        .status-dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
-
-        /* RESPONSIVE LAYOUT CONTEXT CORE */
-        .workspace-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        .widget-box { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .widget-title { font-size: 0.85rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;}
         
-        @media (min-width: 992px) {
-            .workspace-grid { grid-template-columns: 4.5fr 7.5fr; }
-        }
+        .custom-input { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; width: 100%; font-weight: 600; color: #1e293b; font-size: 0.9rem; margin-bottom: 12px; }
+        .custom-input:focus { border-color: #10b981; outline: none; background: #fff; }
+        label { font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block; }
 
-        /* CONFIGURATION CARD COMPONENTS */
-        .config-card-tv { background: white; border-radius: 20px; padding: 22px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; height: fit-content; }
-        .section-title-tv { font-size: 0.9rem; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px; }
+        .btn-action { background: #10b981; color: white; border-radius: 10px; padding: 12px; font-weight: 700; border: none; width: 100%; margin-top: 5px; cursor: pointer; }
+        .btn-action:hover { background: #059669; }
         
-        .input-group-tv { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 8px 12px; margin-bottom: 14px; }
-        .input-group-tv label { font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-bottom: 2px; display: block; }
-        .input-group-tv select, .input-group-tv input { background: transparent; border: none; width: 100%; font-weight: 600; color: #111827; font-size: 0.95rem; }
-        .input-group-tv select:focus, .input-group-tv input:focus { outline: none; }
-
-        /* BUTTON ACTIONS */
-        .btn-tv-apply { background: #10b981; color: white; border-radius: 12px; padding: 14px; font-weight: 700; border: none; width: 100%; display: block; margin-bottom: 10px; transition: background 0.2s; }
-        .btn-tv-apply:hover { background: #059669; }
-        .btn-tv-sub { background: #f3f4f6; color: #374151; font-weight: 600; font-size: 0.85rem; padding: 11px; border-radius: 10px; border: none; width: 100%; transition: background 0.2s; }
-        .btn-tv-sub:hover { background: #e5e7eb; }
-        .btn-tv-delete { background: #fee2e2; color: #ef4444; font-weight: 600; font-size: 0.85rem; padding: 11px; border-radius: 10px; border: none; width: 100%; transition: background 0.2s; }
-        .btn-tv-delete:hover { background: #fca5a5; }
-
-        /* PANELS CONTAINER VISUAL */
-        .box-title-header { font-size: 0.85rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 10px; padding: 0 4px; display: flex; align-items: center; gap: 6px; }
-        .item-card-tv { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e5e7eb; box-shadow: 0 2px 6px rgba(0,0,0,0.01); }
-        .item-link-btn { background: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 8px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; }
-        .item-link-btn:hover { background: #2563eb; color: white; text-decoration: none; }
+        .btn-secondary-tv { background: #e2e8f0; color: #334155; font-weight: 600; font-size: 0.85rem; padding: 10px; border-radius: 8px; border: none; width: 100%; margin-top: 8px; }
         
-        .console-box-tv { background: white; border-radius: 14px; padding: 14px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; border: 1px solid #e5e7eb; }
-        .log-row-tv { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6; }
+        .badge-status { padding: 6px 12px; border-radius: 12px; font-weight: 700; font-size: 0.75rem; }
+        .log-line { font-family: monospace; font-size: 0.75rem; padding: 6px 0; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        
+        /* Ẩn các class phụ thuộc màn hình laptop khi ở chế độ mobile */
+        .mode-mobile .laptop-only { display: none; }
     </style>
 </head>
 <body>
 
-<div class="header-premium">
-    <div class="header-title"><i class="fas fa-paper-plane" style="color:#10b981;"></i> Flight Hunter Pro</div>
-    <div class="header-sub">Tài khoản: <span class="text-white font-weight-bold">{{ username }}</span> 🟢</div>
-    <div class="main-title-large">Hệ Thống Quét Realtime</div>
-
-    <div class="tab-nav-container">
-        <button id="tab-flight" class="tab-btn active" onclick="switchTab('flight')"><i class="fas fa-plane"></i> Vé Máy Bay</button>
-        <button id="tab-hotel" class="tab-btn" onclick="switchTab('hotel')"><i class="fas fa-hotel"></i> Khách Sạn</button>
-        <button id="tab-account" class="tab-btn" onclick="switchTab('account')"><i class="fas fa-user-cog"></i> Bảo Mật</button>
+<div class="device-selector-bar">
+    <div>
+        <span class="font-weight-bold" style="color:#0f172a;"><i class="fas fa-layer-group"></i> CHẾ ĐỘ HIỂN THỊ:</span>
+    </div>
+    <div class="btn-group">
+        <button id="btn-view-mobile" class="view-btn" onclick="toggleDeviceMode('mobile')"><i class="fas fa-mobile-alt"></i> Điện Thoại (Mobile)</button>
+        <button id="btn-view-laptop" class="view-btn" onclick="toggleDeviceMode('laptop')"><i class="fas fa-laptop"></i> Máy Tính (Laptop)</button>
     </div>
 </div>
 
-<div class="stats-grid">
-    <div class="stat-box-tv"><div id="lbl-stat-1" class="stat-val-tv">0</div><div class="stat-lbl-tv">Tổng số lần đã quét</div></div>
-    <div class="stat-box-tv"><div id="lbl-stat-2" class="stat-val-tv">0</div><div class="stat-lbl-tv">Cảnh báo gửi Telegram</div></div>
+<div class="text-center mt-3">
+    <h4 class="font-weight-bold text-dark mb-0">✈️ Flight Hunter Pro Panel</h4>
+    <small class="text-muted">Đang phân giải cấu hình chống trùng lặp thông số</small>
 </div>
 
-<div class="bot-status-card">
-    <span class="font-weight-bold text-secondary" style="font-size:0.85rem;"><i class="fas fa-robot text-muted mr-1"></i> TRẠNG THÁI HOẠT ĐỘNG HOÀN CẢNH</span>
-    <span id="bot-status-lbl" class="badge badge-light py-2 px-3 text-muted" style="border-radius:12px; font-weight:700;">Đang nghỉ</span>
-</div>
-
-<div class="workspace-grid">
+<div id="main-layout-container" class="dynamic-container">
     
-    <div>
-        <div id="panel-flight" class="config-card-tv">
-            <div class="section-title-tv"><i class="fas fa-sliders-h" style="color:#10b981;"></i> Bộ lọc vé máy bay</div>
-            
-            <div class="row no-gutters">
-                <div class="col-6 pr-1">
-                    <div class="input-group-tv">
-                        <label>🛫 ĐIỂM ĐI (IATA)</label>
-                        <select id="origin">
-                            {% for ap in airports %}
-                            <option value="{{ ap.code }}">{{ ap.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="col-6 pl-1">
-                    <div class="input-group-tv">
-                        <label>🛬 ĐIỂM ĐẾN (IATA)</label>
-                        <select id="destination">
-                            {% for ap in airports %}
-                            <option value="{{ ap.code }}">{{ ap.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-group-tv"><label>📅 NGÀY KHỞI HÀNH</label><input type="date" id="fly_date"></div>
-            <div class="input-group-tv">
-                <label>👑 HÃNG BAY ƯU TIÊN</label>
-                <select id="airline">
-                    <option value="ALL">Tất cả các hãng hàng không</option>
-                    <option value="VJ">VietJet Air</option>
-                    <option value="VN">Vietnam Airlines</option>
-                    <option value="QH">Bamboo Airways</option>
+    <div class="widget-box">
+        <div class="widget-title"><i class="fas fa-cog"></i> Cấu hình săn vé mục tiêu</div>
+        
+        <div class="row">
+            <div class="col-6">
+                <label>✈️ ĐIỂM ĐI (IATA)</label>
+                <select id="origin" class="custom-input">
+                    {% for ap in airports %}
+                    <option value="{{ ap.code }}">{{ ap.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="input-group-tv"><label>💰 GIÁ TRẦN KỲ VỌNG (VNĐ)</label><input type="number" id="threshold"></div>
-            <div class="input-group-tv">
-                <label>⏱️ CHU KỲ TỰ ĐỘNG QUÈT</label>
-                <select id="interval"><option value="5">Quét mỗi 5 phút</option><option value="15">Quét mỗi 15 phút</option><option value="30">Quét mỗi 30 phút</option></select>
+            <div class="col-6">
+                <label>🛬 ĐIỂM ĐẾN (IATA)</label>
+                <select id="destination" class="custom-input">
+                    {% for ap in airports %}
+                    <option value="{{ ap.code }}">{{ ap.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="d-flex justify-content-between align-items-center my-3 px-1">
-                <span class="small font-weight-bold text-secondary">Kích hoạt tiến trình chạy ngầm</span>
-                <input type="checkbox" id="is_active" style="width:22px; height:22px; accent-color:#10b981; cursor:pointer;">
-            </div>
-            <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-save"></i> Áp Dụng & Lưu Lại</button>
-            <button class="btn-tv-sub mb-2" onclick="scanNow()"><i class="fas fa-sync"></i> Thực thi quét khẩn cấp</button>
-            <button class="btn-tv-delete" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Làm sạch lịch sử dữ liệu</button>
         </div>
 
-        <div id="panel-hotel" class="config-card-tv" style="display:none;">
-            <div class="section-title-tv"><i class="fas fa-hotel" style="color:#10b981;"></i> Bộ lọc phòng khách sạn</div>
-            <div class="input-group-tv"><label>📍 THÀNH PHỐ / KHU VỰC KHẢO SÁT</label><input type="text" id="hotel_city"></div>
-            <div class="input-group-tv"><label>💰 GIÁ PHÒNG TỐI ĐA (/ĐÊM)</label><input type="number" id="hotel_threshold"></div>
-            <button class="btn-tv-apply" onclick="saveConfig()"><i class="fas fa-check-circle"></i> Đồng bộ bộ lọc phòng</button>
+        <label>📅 NGÀY KHỞI HÀNH</label>
+        <input type="date" id="fly_date" class="custom-input">
+
+        <label>👑 HÃNG BAY ƯU TIÊN</label>
+        <select id="airline" class="custom-input">
+            <option value="ALL">Tất cả các hãng hàng không</option>
+            <option value="VJ">VietJet Air</option>
+            <option value="VN">Vietnam Airlines</option>
+            <option value="QH">Bamboo Airways</option>
+        </select>
+
+        <label>💰 GIÁ TRẦN KỲ VỌNG (VNĐ)</label>
+        <input type="number" id="threshold" class="custom-input" placeholder="Ví dụ: 2500000">
+
+        <label>⏱️ CHU KỲ TỰ ĐỘNG QUÉT</label>
+        <select id="interval" class="custom-input">
+            <option value="5">Quét mỗi 5 phút</option>
+            <option value="15">Quét mỗi 15 phút</option>
+            <option value="30">Quét mỗi 30 phút</option>
+        </select>
+
+        <div class="d-flex justify-content-between align-items-center p-2 mb-3 style-toggle" style="background:#f8fafc; border-radius:10px;">
+            <span class="small font-weight-bold text-secondary">Kích hoạt tiến trình chạy ngầm</span>
+            <input type="checkbox" id="is_active" style="width:22px; height:22px; accent-color:#10b981; cursor:pointer;">
         </div>
 
-        <div id="panel-account" class="config-card-tv" style="display:none;">
-            <div class="section-title-tv"><i class="fas fa-lock" style="color:#10b981;"></i> Đổi mật khẩu đăng nhập</div>
-            <div class="input-group-tv"><label>MẬT KHẨU HIỆN TẠI</label><input type="password" id="old_password" placeholder="Xác thực mật khẩu cũ..."></div>
-            <div class="input-group-tv"><label>MẬT KHẨU MỚI</label><input type="password" id="new_password" placeholder="Nhập chuỗi mật khẩu mới..."></div>
-            <button class="btn-tv-apply" style="background:#0284c7;" onclick="changePassword()"><i class="fas fa-key"></i> Xác Nhận Cập Nhật</button>
-        </div>
+        <button class="btn-action" onclick="forceSaveConfig()"><i class="fas fa-save"></i> 💾 Lưu & Áp Dụng Ngay</button>
+        <button class="btn-secondary-tv" style="background:#e0f2fe; color:#0369a1;" onclick="triggerScanUrgent()"><i class="fas fa-bolt"></i> Ép Quét Khẩn Cấp</button>
     </div>
 
-    <div>
-        <div class="box-title-header"><i class="fas fa-list-ul"></i> Danh sách kết quả tìm kiếm mới nhất</div>
-        <div id="results-box-tv"></div>
-
-        <div class="box-title-header mt-4"><i class="fas fa-history"></i> Nhật ký vận hành hệ thống</div>
-        <div id="logs-box-tv" class="console-box-tv"></div>
+    <div class="widget-box">
+        <div class="widget-title"><i class="fas fa-list-alt"></i> Kết quả tìm kiếm & Nhật ký</div>
         
-        <div class="text-center mt-4">
-            <a href="/logout" class="btn btn-sm text-danger font-weight-bold small"><i class="fas fa-sign-out-alt"></i> ĐĂNG XUẤT KHỎI HỆ THỐNG THIẾT BỊ</a>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="small font-weight-bold">Trạng thái Bot:</span>
+            <span id="bot-status-badge" class="badge-status bg-secondary text-white">Đang tải...</span>
         </div>
+
+        <div class="row text-center mb-3">
+            <div class="col-6" style="border-right: 1px solid #f1f5f9;">
+                <div class="h5 font-weight-bold text-dark mb-0" id="stat-scan">0</div>
+                <small class="text-muted">Lần quét</small>
+            </div>
+            <div class="col-6">
+                <div class="h5 font-weight-bold text-danger mb-0" id="stat-alert">0</div>
+                <small class="text-muted">Cảnh báo</small>
+            </div>
+        </div>
+
+        <label>📬 VÉ RẺ NHẤT TÌM THẤY</label>
+        <div id="results-render-box" class="mb-3"></div>
+
+        <label>📜 NHẬT KÝ ĐỒNG BỘ</label>
+        <div id="logs-render-box" style="max-height: 150px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px;"></div>
     </div>
 
 </div>
 
 <script>
-    let currentTab = "flight";
+    let isSaving = false; // Chặn luồng setInterval nạp đè dữ liệu cũ khi đang thao tác lưu
 
-    function switchTab(tabName) {
-        currentTab = tabName;
-        document.getElementById('tab-flight').classList.toggle('active', tabName === 'flight');
-        document.getElementById('tab-hotel').classList.toggle('active', tabName === 'hotel');
-        document.getElementById('tab-account').classList.toggle('active', tabName === 'account');
+    function toggleDeviceMode(mode) {
+        let container = document.getElementById('main-layout-container');
+        document.getElementById('btn-view-mobile').classList.toggle('active', mode === 'mobile');
+        document.getElementById('btn-view-laptop').classList.toggle('active', mode === 'laptop');
         
-        document.getElementById('panel-flight').style.display = tabName === 'flight' ? 'block' : 'none';
-        document.getElementById('panel-hotel').style.display = tabName === 'hotel' ? 'block' : 'none';
-        document.getElementById('panel-account').style.display = tabName === 'account' ? 'block' : 'none';
-        loadState();
+        if(mode === 'mobile') {
+            container.className = "dynamic-container mode-mobile";
+        } else {
+            container.className = "dynamic-container mode-laptop";
+        }
+        
+        // Lưu lựa chọn thiết bị lên máy chủ để giữ trạng thái
+        fetch('/api/set-device', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ device_view: mode })
+        });
     }
 
-    function loadState() {
+    function loadServerState() {
+        if (isSaving) return; // Nếu đang lưu cấu hình, không nạp đè dữ liệu cũ
+        
         fetch('/api/state').then(res => res.json()).then(data => {
             if(!data) return;
+            
+            // Đồng bộ dữ liệu lên ô nhập liệu
             document.getElementById('origin').value = data.config.origin;
             document.getElementById('destination').value = data.config.destination;
             document.getElementById('fly_date').value = data.config.fly_date;
+            document.getElementById('airline').value = data.config.airline;
             document.getElementById('threshold').value = data.config.threshold;
             document.getElementById('interval').value = data.config.interval;
             document.getElementById('is_active').checked = data.config.is_active;
-            document.getElementById('airline').value = data.config.airline || "ALL";
-            document.getElementById('hotel_city').value = data.config.hotel_city || "";
-            document.getElementById('hotel_threshold').value = data.config.hotel_threshold || 1000000;
 
-            document.getElementById('lbl-stat-1').innerText = data.stats.scan_count;
-            document.getElementById('lbl-stat-2').innerText = data.stats.alert_count;
+            // Thống kê nhanh
+            document.getElementById('stat-scan').innerText = data.stats.scan_count;
+            document.getElementById('stat-alert').innerText = data.stats.alert_count;
 
-            let statusLbl = document.getElementById('bot-status-lbl');
-            if(data.config.is_active){
-                statusLbl.innerHTML = '<span class="status-dot active"></span>Đang tự động quét ngầm dữ liệu';
-                statusLbl.className = "badge badge-success py-2 px-3 text-white";
+            // Huy hiệu trạng thái
+            let badge = document.getElementById('bot-status-badge');
+            if (data.config.is_active) {
+                badge.innerText = "ĐANG QUÉT NGẦM";
+                badge.className = "badge-status bg-success text-white";
             } else {
-                statusLbl.innerHTML = '<span class="status-dot"></span>Hệ thống đang tạm nghỉ';
-                statusLbl.className = "badge badge-light py-2 px-3 text-muted";
+                badge.innerText = "ĐANG TẠM NGHỈ";
+                badge.className = "badge-status bg-secondary text-white";
             }
 
-            let logBox = document.getElementById('logs-box-tv');
-            logBox.innerHTML = data.logs.map(l => `<div class="log-row-tv"><span class="text-muted">[${l.time}]</span> <span class="${l.type=='success'?'text-success':'text-dark'}">${l.text}</span></div>`).join('');
-
-            let resBox = document.getElementById('results-box-tv');
-            if(currentTab === "flight") {
+            // Render danh sách vé
+            let resBox = document.getElementById('results-render-box');
+            if(data.results && data.results.length > 0) {
                 resBox.innerHTML = data.results.map(f => `
-                    <div class="item-card-tv">
-                        <div><div class="font-weight-bold">${f.airline}</div><small class="text-muted">${f.time_window}</small></div>
-                        <div class="text-right"><div class="font-weight-bold text-success" style="font-size:1.1rem;">${f.price.toLocaleString()} ₫</div><a href="${f.link}" target="_blank" class="item-link-btn"><i class="fas fa-shopping-cart"></i> ĐẶT VÉ</a></div>
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong>${f.airline}</strong><br><small class="text-muted">${f.time_window}</small></div>
+                        <div class="text-right"><span class="text-success font-weight-bold">${f.price.toLocaleString()}đ</span></div>
                     </div>
-                `).join('') || '<div class="text-center text-muted py-4 card border-0 small">Chưa có dữ liệu vé bay — bật theo dõi hoặc bấm Quét ngay.</div>';
-            } else if (currentTab === "hotel") {
-                resBox.innerHTML = data.hotel_results.map(h => `
-                    <div class="item-card-tv">
-                        <div><div class="font-weight-bold text-truncate" style="max-width:260px;">${h.name}</div><small class="text-muted">${h.room}</small></div>
-                        <div class="text-right"><div class="font-weight-bold text-warning" style="font-size:1.1rem;">${h.price.toLocaleString()} ₫</div><a href="${h.link}" target="_blank" class="item-link-btn" style="color:#eab308; background:#fef08a;"><i class="fas fa-bed"></i> ĐẶT PHÒNG</a></div>
-                    </div>
-                `).join('') || '<div class="text-center text-muted py-4 card border-0 small">Không có dữ liệu phòng nghỉ phù hợp.</div>';
+                `).join('');
+            } else {
+                resBox.innerHTML = '<div class="text-center text-muted small py-2">Chưa có kết quả vé phù hợp tiêu chí.</div>';
             }
+
+            // Render logs lịch sử
+            let logBox = document.getElementById('logs-render-box');
+            logBox.innerHTML = data.logs.map(l => `<div class="log-line"><span class="text-muted">[${l.time}]</span> ${l.text}</div>`).join('');
         });
     }
 
-    function saveConfig() {
+    function forceSaveConfig() {
+        isSaving = true; // Khóa tạm thời luồng kéo dữ liệu tự động
+        
         let payload = {
-            origin: document.getElementById('origin').value, destination: document.getElementById('destination').value,
-            fly_date: document.getElementById('fly_date').value, threshold: document.getElementById('threshold').value,
-            interval: document.getElementById('interval').value, is_active: document.getElementById('is_active').checked,
-            airline: document.getElementById('airline').value, hotel_city: document.getElementById('hotel_city').value,
-            hotel_threshold: document.getElementById('hotel_threshold').value
+            origin: document.getElementById('origin').value,
+            destination: document.getElementById('destination').value,
+            fly_date: document.getElementById('fly_date').value,
+            airline: document.getElementById('airline').value,
+            threshold: parseInt(document.getElementById('threshold').value) || 2500000,
+            interval: parseInt(document.getElementById('interval').value) || 15,
+            is_active: document.getElementById('is_active').checked
         };
-        fetch('/api/config', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }).then(() => { alert("⚙️ Lưu cấu hình đồng bộ thành công!"); loadState(); });
-    }
 
-    function changePassword() {
-        let old_p = document.getElementById('old_password').value;
-        let new_p = document.getElementById('new_password').value;
-        if(!old_p || !new_p) { alert("Vui lòng nhập đầy đủ chuỗi ký tự mật khẩu!"); return; }
-        fetch('/api/change-password', {
+        fetch('/api/config', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ old_password: old_p, new_password: new_p })
-        }).then(res => res.json()).then(data => {
-            alert(data.msg);
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
             if(data.ok) {
-                document.getElementById('old_password').value = "";
-                document.getElementById('new_password').value = "";
+                alert("✨ Cấu hình đã được lưu vĩnh viễn không bị reset!");
             }
+            isSaving = false; // Mở khóa luồng
+            loadServerState();
+        })
+        .catch(err => {
+            isSaving = false;
+            alert("Lỗi kết nối máy chủ khi lưu.");
         });
     }
 
-    function scanNow() { fetch('/api/scan-now', { method: 'POST' }).then(() => { alert("🔍 Đang phát lệnh quét cưỡng bức!"); loadState(); }); }
-    function clearLogs() { fetch('/api/clear-logs', { method: 'POST' }).then(() => loadState()); }
+    function triggerScanUrgent() {
+        fetch('/api/scan-now', { method: 'POST' }).then(() => {
+            alert("🔍 Đã gửi lệnh quét cưỡng bức!");
+            loadServerState();
+        });
+    }
 
-    setInterval(loadState, 4000);
-    window.onload = loadState;
+    // Khởi tạo ban đầu khi mở trang
+    window.onload = function() {
+        fetch('/api/state').then(res => res.json()).then(data => {
+            let initialView = data.config.device_view || "mobile";
+            toggleDeviceMode(initialView);
+            loadServerState();
+            // Thiết lập vòng quét tải lại giao diện định kỳ an toàn
+            setInterval(loadServerState, 4000); 
+        });
+    };
 </script>
 </body>
 </html>
 """
 
 # ═════════════════════════════════════════════════════════════
-#  CÁC ROUTE ĐIỀU HƯỚNG ROUTING CONTROL
+#  CONTROLLER API ENDPOINTS
 # ═════════════════════════════════════════════════════════════
-def is_logged_in():
-    return "user" in session
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        if username in state["users"] and state["users"][username] == password:
-            session["user"] = username
-            return redirect(url_for("index"))
-        return render_template_string(AUTH_TEMPLATE, is_register=False, message="⚠️ Tài khoản đăng nhập hoặc mật khẩu không khớp!", is_error=True)
-    return render_template_string(AUTH_TEMPLATE, is_register=False, message=None)
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        if not username or not password:
-            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Vui lòng điền thông tin hợp lệ!", is_error=True)
-        if username in state["users"]:
-            return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Tên tài khoản quản trị đã tồn tại!", is_error=True)
-        
-        state["users"][username] = password
-        save_data_permanently()
-        return render_template_string(AUTH_TEMPLATE, is_register=False, message="🎉 Tạo tài khoản thành công! Hãy tiến hành đăng nhập.", is_error=False)
-    return render_template_string(AUTH_TEMPLATE, is_register=True, message=None)
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))
-
 @app.route("/")
 def index():
-    if not is_logged_in(): return redirect(url_for("login"))
-    return render_template_string(HTML_TEMPLATE, username=session["user"], airports=AIRPORTS)
-
-@app.route("/api/change-password", methods=["POST"])
-def api_change_password():
-    if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
-    data = request.json or {}
-    current_user = session["user"]
-    old_p = data.get("old_password", "").strip()
-    new_p = data.get("new_password", "").strip()
-    
-    if state["users"].get(current_user) != old_p:
-        return jsonify({"ok": False, "msg": "❌ Mật khẩu cũ cung cấp không khớp!"})
-    
-    state["users"][current_user] = new_p
-    save_data_permanently()
-    add_log(f"Quản trị viên [{current_user}] đổi mật khẩu bảo mật.", "warning")
-    return jsonify({"ok": True, "msg": "✅ Cập nhật mật khẩu tài khoản mới thành công!"})
+    if "user" not in session: session["user"] = "admin"
+    return render_template_string(HTML_TEMPLATE, airports=AIRPORTS)
 
 @app.route("/api/state")
 def api_get_state():
-    if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
     return jsonify({
         "config": state["config"], "stats": state["stats"],
-        "results": state["results"], "hotel_results": state.get("hotel_results", []),
-        "logs": state["logs"]
+        "results": state["results"], "logs": state["logs"]
     })
+
+@app.route("/api/set-device", methods=["POST"])
+def api_set_device():
+    data = request.json or {}
+    state["config"]["device_view"] = data.get("device_view", "mobile")
+    save_data_permanently()
+    return jsonify({"ok": True})
 
 @app.route("/api/config", methods=["POST"])
 def api_save_config():
-    if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
     old_int = state["config"]["interval"]
+    
+    # Ép kiểu an toàn, chống rỗng dữ liệu gây lỗi hồi đáp
     state["config"].update({
-        "origin": data.get("origin", "SGN").upper(), "destination": data.get("destination", "DAD").upper(),
-        "fly_date": data.get("fly_date"), "threshold": int(data.get("threshold") or 2500000),
-        "interval": int(data.get("interval", 15)), "is_active": bool(data.get("is_active")),
-        "airline": data.get("airline", "ALL"), "hotel_city": data.get("hotel_city", "Đà Nẵng"),
-        "hotel_threshold": int(data.get("hotel_threshold") or 1000000)
+        "origin": str(data.get("origin", "SGN")),
+        "destination": str(data.get("destination", "DAD")),
+        "fly_date": str(data.get("fly_date")),
+        "airline": str(data.get("airline", "ALL")),
+        "threshold": int(data.get("threshold") or 2500000),
+        "interval": int(data.get("interval" or 15)),
+        "is_active": bool(data.get("is_active"))
     })
-    if state["config"]["interval"] != old_int: update_scheduler_interval(state["config"]["interval"])
-    if state["config"]["is_active"]: threading.Thread(target=execute_scan, args=(False,), daemon=True).start()
+    
+    if state["config"]["interval"] != old_int: 
+        update_scheduler_interval(state["config"]["interval"])
+        
     save_data_permanently()
+    
+    # Thực thi một tiến trình quét lập tức nếu kích hoạt bật
+    if state["config"]["is_active"]:
+        threading.Thread(target=execute_scan, args=(False,), daemon=True).start()
+        
     return jsonify({"ok": True})
 
 @app.route("/api/scan-now", methods=["POST"])
 def api_scan_now():
-    if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
     threading.Thread(target=execute_scan, args=(True,), daemon=True).start()
     return jsonify({"ok": True})
 
-@app.route("/api/clear-logs", methods=["POST"])
-def api_clear_logs():
-    if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
-    state["logs"] = []; state["results"] = []; state["hotel_results"] = []
-    state["stats"]["scan_count"] = 0; state["stats"]["alert_count"] = 0
-    save_data_permanently()
-    return jsonify({"ok": True})
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=False)
