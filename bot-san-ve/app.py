@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
 ║   FLIGHT & HOTEL HUNTER — Full Account Management            ║
-║   Đầy đủ: Đăng ký | Đăng nhập | Đổi mật khẩu | Quét 24/7     ║
+║   Bổ sung: Menu chọn sân bay trực quan & Fix lỗi Link 404    ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -29,13 +29,29 @@ logger = logging.getLogger(__name__)
 
 DATA_FILE = "premium_hunter_data.json"
 
+# Danh sách sân bay hỗ trợ chọn nhanh
+AIRPORTS = [
+    {"code": "SGN", "name": "SGN - TP. Hồ Chí Minh"},
+    {"code": "HAN", "name": "HAN - Hà Nội"},
+    {"code": "DAD", "name": "DAD - Đà Nẵng"},
+    {"code": "CXR", "name": "CXR - Nha Trang"},
+    {"code": "PQC", "name": "PQC - Phú Quốc"},
+    {"code": "VCA", "name": "VCA - Cần Thơ"},
+    {"code": "HPH", "name": "HPH - Hải Phòng"},
+    {"code": "VII", "name": "VII - Vinh"},
+    {"code": "HUI", "name": "HUI - Huế"},
+    {"code": "BMV", "name": "BMV - Buôn Ma Thuột"},
+    {"code": "VCL", "name": "VCL - Chu Lai"},
+    {"code": "UIH", "name": "UIH - Quy Nhơn"}
+]
+
 # ═════════════════════════════════════════════════════════════
-#  CƠ CHẾ LƯU TRỮ VĨNH VIỄN (HỖ TRỢ NHIỀU TÀI KHOẢN)
+#  CƠ CHẾ LƯU TRỮ VĨNH VIỄN
 # ═════════════════════════════════════════════════════════════
 def load_saved_data():
     default_state = {
         "users": {
-            "admin": "123456" # Tài khoản mặc định ban đầu
+            "admin": "123456"
         },
         "config": {
             "origin": "SGN", "destination": "DAD",
@@ -50,7 +66,6 @@ def load_saved_data():
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # Đảm bảo cấu trúc cũ không bị lỗi khi nâng cấp
                 if "users" not in data:
                     data["users"] = {"admin": "123456"}
                 return data
@@ -78,48 +93,42 @@ def add_log(message: str, log_type: str = "info"):
     save_data_permanently()
 
 # ═════════════════════════════════════════════════════════════
-#  HÀM TẠO ĐƯỜNG DẪN TRỰC TIẾP KHÔNG BỊ 404
+#  HÀM TẠO ĐƯỜNG DẪN CHUẨN ĐỊNH DẠNG (FIX LỖI 404)
 # ═════════════════════════════════════════════════════════════
 def generate_direct_links(type_search: str, item_name: str, code1: str, code2: str, date_str: str) -> str:
     try:
         if type_search == "flight":
-            # Chuyển đổi định dạng ngày từ YYYY-MM-DD sang DD-MM-YYYY để khớp với hệ thống Việt Nam
+            # Chuẩn hóa định dạng ngày từ YYYY-MM-DD thành DD-MM-YYYY cho đại lý Việt Nam
             if date_str and "-" in date_str:
                 parts = date_str.split("-")
-                if len(parts)[0] == 4: # Nếu đang là YYYY-MM-DD
+                if len(parts)[0] == 4:
                     date_formatted = f"{parts[2]}-{parts[1]}-{parts[0]}"
                 else:
                     date_formatted = date_str
             else:
-                date_formatted = "28-05-2026"
+                date_formatted = datetime.now().strftime("%d-%m-%Y")
 
-            # Tối ưu cấu trúc link tìm kiếm trực tiếp chuẩn không bị 404
             if "VietJet" in item_name:
                 return f"https://www.vietjetair.com/vi/ve-may-bay/dat-ve?origin={code1}&destination={code2}&departDate={date_formatted.replace('-', '/')}&adults=1"
-            
             elif "Vietnam Airlines" in item_name:
                 return f"https://www.vietnamairlines.com/vi/flight-search?itinerary={code1}-{code2}:{date_str}&adt=1"
-            
             elif "Bamboo" in item_name:
                 return f"https://www.bambooairways.com/reservation/v1/flights?origin={code1}&destination={code2}&departureDate={date_str}&adults=1"
             
-            # Cấu trúc link tìm kiếm Traveloka mới nhất (Fix lỗi 404)
+            # Khớp định dạng chuẩn mã Traveloka để không bị 404 hệ thống
             return f"https://www.traveloka.com/vi-vn/flight/search?ap={code1}.{code2}&dt={date_formatted}.NA&ps=1.0.0&sc=ECONOMY"
-        
         else:
-            # Đường dẫn tìm kiếm khách sạn giá rẻ trực tiếp trên Agoda / Booking
             query_city = code1.replace(" ", "%20")
             if "Agoda" in item_name:
                 return f"https://www.agoda.com/vi-vn/pages/agoda/default/DestinationSearchResult.aspx?city={query_city}"
             elif "Booking" in item_name:
                 return f"https://www.booking.com/searchresults.vi.html?ss={query_city}"
-            
             return f"https://www.traveloka.com/vi-vn/hotel/search?spec={date_str}.1.1.HOTEL_GEO.{code1}.{query_city}.1"
-            
     except Exception:
         return "https://www.google.com"
+
 # ═════════════════════════════════════════════════════════════
-#  HỆ THỐNG QUÈT TỰ ĐỘNG NGẦM
+#  HỆ THỐNG QUÉT TỰ ĐỘNG NGẦM
 # ═════════════════════════════════════════════════════════════
 def run_flight_scan(cfg):
     flights = []
@@ -171,16 +180,11 @@ def execute_scan(force_notify: bool = False):
         if flights:
             cheapest_flight = flights[0]
             state["stats"]["cheapest"] = f"{cheapest_flight['price']:,} ₫"
-            add_log(f"Quét thành công! Vé rẻ nhất: {cheapest_flight['price']:,} ₫ ({cheapest_flight['airline']})", "success")
+            add_log(f"Quét thành công! Vé {cfg['origin']}➔{cfg['destination']}: {cheapest_flight['price']:,} ₫", "success")
             if cheapest_flight["price"] <= int(cfg["threshold"]) or force_notify:
                 state["stats"]["alert_count"] += 1
                 msg = f"✈️ <b>FLIGHT HUNTER - GIÁ VÉ RẺ</b>\n\n📍 Chặng: {cfg['origin']} ➔ {cfg['destination']}\n📅 Ngày: {cfg['fly_date']}\n💵 Giá: <b>{cheapest_flight['price']:,} ₫</b>\n👑 Hãng: {cheapest_flight['airline']}\n\n👉 <a href='{cheapest_flight['link']}'>ĐẶT VÉ NGAY</a>"
                 requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"}, timeout=8)
-        if hotels:
-            cheapest_hotel = hotels[0]
-            if cheapest_hotel["price"] <= int(cfg["hotel_threshold"]) or force_notify:
-                msg_hotel = f"🏨 <b>HOTEL HUNTER - PHÒNG GIÁ RẺ</b>\n\n📍 Khu vực: {cfg['hotel_city']}\n🛏️ Phòng: {cheapest_hotel['room']}\n💵 Giá: <b>{cheapest_hotel['price']:,} ₫/đêm</b>\n\n👉 <a href='{cheapest_hotel['link']}'>ĐẶT PHÒNG NGAY</a>"
-                requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={"chat_id": TELEGRAM_CHAT_ID, "text": msg_hotel, "parse_mode": "HTML"}, timeout=8)
     except Exception as e:
         add_log(f"Lỗi quét tự động: {str(e)}", "error")
     save_data_permanently()
@@ -199,7 +203,7 @@ def update_scheduler_interval(minutes: int):
 update_scheduler_interval(state["config"]["interval"])
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN ĐĂNG NHẬP / ĐĂNG KÝ (AUTH UI)
+#  GIAO DIỆN AUTH
 # ═════════════════════════════════════════════════════════════
 AUTH_TEMPLATE = """
 <!DOCTYPE html>
@@ -231,7 +235,7 @@ AUTH_TEMPLATE = """
     <div class="alert alert-{% if is_error %}danger{% else %}success{% endif %} py-2 small font-weight-bold text-center" style="border-radius:8px;">{{ message }}</div>
     {% endif %}
 
-    <form method="POST" action="{% if is_register %}/register%20{% else %}/login{% endif %}">
+    <form method="POST" action="{% if is_register %}/register{% else %}/login{% endif %}">
         <div class="form-group">
             <label class="small font-weight-bold text-muted">TÊN TÀI KHOẢN</label>
             <input type="text" name="username" class="form-control" placeholder="Nhập tên tài khoản..." required autofocus>
@@ -258,7 +262,7 @@ AUTH_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN CHÍNH (THÊM FORM ĐỔI MẬT KHẨU TRONG TAB)
+#  GIAO DIỆN CHÍNH (ĐÃ THAY ĐỔI Ô NHẬP THÀNH MENU CHỌN SÂN BAY)
 # ═════════════════════════════════════════════════════════════
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -294,8 +298,8 @@ HTML_TEMPLATE = """
         
         .input-group-tv { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 8px 12px; margin-bottom: 12px; }
         .input-group-tv label { font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-bottom: 2px; display: block; }
-        .input-group-tv input, .input-group-tv select { background: transparent; border: none; width: 100%; font-weight: 600; color: #111827; font-size: 0.95rem; }
-        .input-group-tv input:focus, .input-group-tv select:focus { outline: none; }
+        .input-group-tv select, .input-group-tv input { background: transparent; border: none; width: 100%; font-weight: 600; color: #111827; font-size: 0.95rem; }
+        .input-group-tv select:focus, .input-group-tv input:focus { outline: none; }
 
         .btn-tv-apply { background: #10b981; color: white; border-radius: 12px; padding: 14px; font-weight: 700; border: none; width: 100%; display: block; margin-bottom: 10px; }
         .btn-tv-sub { background: #f3f4f6; color: #374151; font-weight: 600; font-size: 0.85rem; padding: 10px; border-radius: 10px; border: none; width: 100%; }
@@ -337,10 +341,30 @@ HTML_TEMPLATE = """
     
     <div id="panel-flight" class="config-card-tv">
         <div class="section-title-tv"><i class="fas fa-sliders-h" style="color:#10b981;"></i> Theo dõi máy bay</div>
+        
         <div class="row no-gutters">
-            <div class="col-6 pr-1"><div class="input-group-tv"><label>🛫 ĐIỂM ĐI</label><input type="text" id="origin" class="text-uppercase"></div></div>
-            <div class="col-6 pl-1"><div class="input-group-tv"><label>🛬 ĐIỂM ĐẾN</label><input type="text" id="destination" class="text-uppercase"></div></div>
+            <div class="col-6 pr-1">
+                <div class="input-group-tv">
+                    <label>🛫 ĐIỂM ĐI</label>
+                    <select id="origin">
+                        {% for ap in airports %}
+                        <option value="{{ ap.code }}">{{ ap.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-6 pl-1">
+                <div class="input-group-tv">
+                    <label>🛬 ĐIỂM ĐẾN</label>
+                    <select id="destination">
+                        {% for ap in airports %}
+                        <option value="{{ ap.code }}">{{ ap.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
         </div>
+
         <div class="input-group-tv"><label>📅 NGÀY BAY</label><input type="date" id="fly_date"></div>
         <div class="input-group-tv">
             <label>👑 HÃNG BAY ƯU TIÊN</label>
@@ -448,8 +472,6 @@ HTML_TEMPLATE = """
                         <div class="text-right"><div class="font-weight-bold text-warning">${h.price.toLocaleString()} ₫</div><a href="${h.link}" target="_blank" class="item-link-btn" style="color:#eab308;">ĐẶT PHÒNG</a></div>
                     </div>
                 `).join('') || '<div class="text-center text-muted py-3 small">Không có dữ liệu phòng nghỉ.</div>';
-            } else {
-                resBox.innerHTML = '<div class="text-center text-muted py-3 small">Mục quản lý tài khoản bảo mật.</div>';
             }
         });
     }
@@ -493,7 +515,7 @@ HTML_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  CÁC ROUTE ĐIỀU HƯỚNG VÀ XỬ LÝ ĐĂNG KÝ / ĐỔI MẬT KHẨU
+#  CÁC ROUTE ĐIỀU HƯỚNG
 # ═════════════════════════════════════════════════════════════
 def is_logged_in():
     return "user" in session
@@ -519,7 +541,6 @@ def register():
         if username in state["users"]:
             return render_template_string(AUTH_TEMPLATE, is_register=True, message="⚠️ Tên tài khoản này đã được đăng ký!", is_error=True)
         
-        # Thêm user mới vào data và lưu lại vĩnh viễn
         state["users"][username] = password
         save_data_permanently()
         return render_template_string(AUTH_TEMPLATE, is_register=False, message="🎉 Đăng ký thành công! Hãy đăng nhập.", is_error=False)
@@ -533,9 +554,9 @@ def logout():
 @app.route("/")
 def index():
     if not is_logged_in(): return redirect(url_for("login"))
-    return render_template_string(HTML_TEMPLATE, username=session["user"])
+    # Truyền danh sách sân bay AIRPORTS vào giao diện HTML
+    return render_template_string(HTML_TEMPLATE, username=session["user"], airports=AIRPORTS)
 
-# API Thay đổi mật khẩu
 @app.route("/api/change-password", methods=["POST"])
 def api_change_password():
     if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
