@@ -83,23 +83,41 @@ def add_log(message: str, log_type: str = "info"):
 def generate_direct_links(type_search: str, item_name: str, code1: str, code2: str, date_str: str) -> str:
     try:
         if type_search == "flight":
-            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            # Chuyển đổi định dạng ngày từ YYYY-MM-DD sang DD-MM-YYYY để khớp với hệ thống Việt Nam
+            if date_str and "-" in date_str:
+                parts = date_str.split("-")
+                if len(parts)[0] == 4: # Nếu đang là YYYY-MM-DD
+                    date_formatted = f"{parts[2]}-{parts[1]}-{parts[0]}"
+                else:
+                    date_formatted = date_str
+            else:
+                date_formatted = "28-05-2026"
+
+            # Tối ưu cấu trúc link tìm kiếm trực tiếp chuẩn không bị 404
             if "VietJet" in item_name:
-                return f"https://www.vietjetair.com/vi/ve-may-bay/dat-ve?origin={code1}&destination={code2}&departDate={date_obj.strftime('%d/%m/%Y')}&adults=1"
+                return f"https://www.vietjetair.com/vi/ve-may-bay/dat-ve?origin={code1}&destination={code2}&departDate={date_formatted.replace('-', '/')}&adults=1"
+            
             elif "Vietnam Airlines" in item_name:
                 return f"https://www.vietnamairlines.com/vi/flight-search?itinerary={code1}-{code2}:{date_str}&adt=1"
+            
             elif "Bamboo" in item_name:
                 return f"https://www.bambooairways.com/reservation/v1/flights?origin={code1}&destination={code2}&departureDate={date_str}&adults=1"
-            return f"https://www.google.com/travel/flights"
+            
+            # Cấu trúc link tìm kiếm Traveloka mới nhất (Fix lỗi 404)
+            return f"https://www.traveloka.com/vi-vn/flight/search?ap={code1}.{code2}&dt={date_formatted}.NA&ps=1.0.0&sc=ECONOMY"
+        
         else:
+            # Đường dẫn tìm kiếm khách sạn giá rẻ trực tiếp trên Agoda / Booking
+            query_city = code1.replace(" ", "%20")
             if "Agoda" in item_name:
-                return f"https://www.agoda.com/vi-vn/search?city={code1}"
+                return f"https://www.agoda.com/vi-vn/pages/agoda/default/DestinationSearchResult.aspx?city={query_city}"
             elif "Booking" in item_name:
-                return f"https://www.booking.com/searchresults.vi.html?ss={code1}"
-            return f"https://www.google.com/travel/hotels"
+                return f"https://www.booking.com/searchresults.vi.html?ss={query_city}"
+            
+            return f"https://www.traveloka.com/vi-vn/hotel/search?spec={date_str}.1.1.HOTEL_GEO.{code1}.{query_city}.1"
+            
     except Exception:
         return "https://www.google.com"
-
 # ═════════════════════════════════════════════════════════════
 #  HỆ THỐNG QUÈT TỰ ĐỘNG NGẦM
 # ═════════════════════════════════════════════════════════════
