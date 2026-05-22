@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════╗
 ║   FLIGHT & HOTEL HUNTER — Full Account Management            ║
-║   ĐÃ FIX TRUYỆN: Lỗi lưu cấu hình bị reset lại sau 4 giây    ║
+║   ĐÃ FIX TRIỆT ĐỂ: Lỗi tự động reset ô nhập liệu sau 4 giây  ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -67,8 +67,8 @@ def load_saved_data():
                 data = json.load(f)
                 if "users" not in data:
                     data["users"] = {"admin": "123456"}
-                # Bảo vệ cấu trúc nếu bị thiếu thuộc tính
-                if "config" not in data: data["config"] = default_state["config"]
+                if "config" not in data: 
+                    data["config"] = default_state["config"]
                 return data
         except Exception as e:
             logger.error(f"Lỗi đọc file cấu hình: {e}")
@@ -260,7 +260,7 @@ AUTH_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  GIAO DIỆN CHÍNH
+#  GIAO DIỆN CHÍNH (ĐÃ FIX PHẦN JAVASCRIPT CHỐNG ĐÈ UPDATE)
 # ═════════════════════════════════════════════════════════════
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -414,7 +414,7 @@ HTML_TEMPLATE = """
 
 <script>
     let currentTab = "flight";
-    let isSaving = false; // KHÓA AN TOÀN: Ngăn dữ liệu cũ ghi đè lên giao diện khi đang lưu
+    let isSaving = false;
 
     function switchTab(tabName) {
         currentTab = tabName;
@@ -428,21 +428,36 @@ HTML_TEMPLATE = """
         loadState();
     }
 
+    // Hàm cập nhật thông minh: Nếu ô nào đang được người dùng bấm vào (gõ) thì KHÔNG đè dữ liệu cũ lên ô đó
+    function updateFieldIfNormalized(elementId, value, isCheckbox = false) {
+        let el = document.getElementById(elementId);
+        if (!el || document.activeElement === el) return; // Người dùng đang gõ -> BỎ QUA
+        
+        if (isCheckbox) {
+            el.checked = value;
+        } else {
+            el.value = value;
+        }
+    }
+
     function loadState() {
-        if (isSaving) return; // Nếu đang trong tiến trình lưu cấu hình, bỏ qua việc tự động nạp dữ liệu cũ
+        if (isSaving) return;
         
         fetch('/api/state').then(res => res.json()).then(data => {
             if(!data) return;
-            document.getElementById('origin').value = data.config.origin;
-            document.getElementById('destination').value = data.config.destination;
-            document.getElementById('fly_date').value = data.config.fly_date;
-            document.getElementById('threshold').value = data.config.threshold;
-            document.getElementById('interval').value = data.config.interval;
-            document.getElementById('is_active').checked = data.config.is_active;
-            document.getElementById('airline').value = data.config.airline || "ALL";
-            document.getElementById('hotel_city').value = data.config.hotel_city || "";
-            document.getElementById('hotel_threshold').value = data.config.hotel_threshold || 1000000;
+            
+            // Áp dụng cơ chế chống đè dữ liệu lên các ô Input/Select đang Active
+            updateFieldIfNormalized('origin', data.config.origin);
+            updateFieldIfNormalized('destination', data.config.destination);
+            updateFieldIfNormalized('fly_date', data.config.fly_date);
+            updateFieldIfNormalized('threshold', data.config.threshold);
+            updateFieldIfNormalized('interval', data.config.interval);
+            updateFieldIfNormalized('airline', data.config.airline || "ALL");
+            updateFieldIfNormalized('hotel_city', data.config.hotel_city || "");
+            updateFieldIfNormalized('hotel_threshold', data.config.hotel_threshold || 1000000);
+            updateFieldIfNormalized('is_active', data.config.is_active, true);
 
+            // Các thành phần tĩnh thì cập nhật bình thường
             document.getElementById('lbl-stat-1').innerText = data.stats.scan_count;
             document.getElementById('lbl-stat-2').innerText = data.stats.alert_count;
 
@@ -478,7 +493,7 @@ HTML_TEMPLATE = """
     }
 
     function saveConfig() {
-        isSaving = true; // Kích hoạt khóa bảo vệ
+        isSaving = true;
         
         let payload = {
             origin: document.getElementById('origin').value, 
@@ -499,13 +514,13 @@ HTML_TEMPLATE = """
         })
         .then(res => res.json())
         .then(data => { 
-            isSaving = false; // Mở khóa bảo vệ sau khi server phản hồi thành công
+            isSaving = false;
             alert("⚙️ Đã lưu cấu hình vĩnh viễn thành công!"); 
             loadState(); 
         })
         .catch(err => {
             isSaving = false;
-            alert("❌ Lỗi kết nối đến máy chủ.");
+            alert("❌ Lỗi lưu dữ liệu thất bại.");
         });
     }
 
@@ -537,7 +552,7 @@ HTML_TEMPLATE = """
 """
 
 # ═════════════════════════════════════════════════════════════
-#  CÁC ROUTE ĐIỀU HƯỚNG & XỬ LÝ API
+#  CÁC ROUTE ĐIỀU HƯỚNG & API BACKEND
 # ═════════════════════════════════════════════════════════════
 def is_logged_in():
     return "user" in session
@@ -603,7 +618,6 @@ def api_get_state():
         "logs": state["logs"]
     })
 
-# 🛠️ ĐÃ THÊM: Xử lý lưu cấu hình từ Giao diện gửi lên
 @app.route("/api/config", methods=["POST"])
 def api_save_config():
     if not is_logged_in(): return jsonify({"error": "Unauthorized"}), 401
@@ -611,7 +625,6 @@ def api_save_config():
     
     old_interval = state["config"]["interval"]
     
-    # Cập nhật và ép kiểu an toàn chống crash dữ liệu dữ liệu
     state["config"].update({
         "origin": str(data.get("origin", "SGN")),
         "destination": str(data.get("destination", "DAD")),
@@ -624,14 +637,12 @@ def api_save_config():
         "hotel_threshold": int(data.get("hotel_threshold") or 1000000)
     })
     
-    # Nếu chu kỳ quét thay đổi, cập nhật lại Scheduler
     if state["config"]["interval"] != old_interval:
         update_scheduler_interval(state["config"]["interval"])
         
     save_data_permanently()
     add_log("Hệ thống đã cập nhật và đồng bộ cấu hình săn mục tiêu mới.", "info")
     
-    # Nếu bật kích hoạt, chạy luôn 1 luồng quét ngay lập tức
     if state["config"]["is_active"]:
         threading.Thread(target=execute_scan, args=(False,), daemon=True).start()
         
