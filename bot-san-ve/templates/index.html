@@ -1,669 +1,527 @@
-cat > /mnt/user-data/outputs/app_full.py << 'ENDOFFILE'
-"""
-Flight Hunter Pro — Full System
-Trang chủ đẹp + Auth + Dashboard + Đặt khách sạn + Khu du lịch + Đa ngôn ngữ
-"""
-import os, json, time, logging, threading, random
-from datetime import datetime, timedelta
-import requests
-from flask import Flask, request, jsonify, render_template_string, redirect, session, url_for
+te -->
+              <polygon points="650,580 750,580 720,600 680,600" fill="#022c22" opacity="0.9"/>
+              <polygon points="700,520 700,580 740,570" fill="#065f46" opacity="0.8"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-badge reveal">✨ <span data-vi="Khám phá Việt Nam & Thế Giới" data-en="Discover Vietnam & The World">Khám phá Việt Nam & Thế Giới</span></div>
+        <h1 class="hero-title reveal">
+          <span data-vi="Săn vé máy bay" data-en="Hunt for Flights">Săn vé máy bay</span><br>
+          <span class="em" data-vi="Rẻ & Nhanh Nhất" data-en="Cheapest & Fastest">Rẻ & Nhanh Nhất</span>
+        </h1>
+        <p class="hero-sub reveal" data-vi="Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7. Không còn lo lỡ vé rẻ." data-en="Automated tracking and Telegram price alerts 24/7. Never miss a cheap ticket again.">
+          Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7. Không còn lo lỡ vé rẻ.
+        </p>
+        <div class="hero-btns reveal">
+          <button class="btn-hero-primary" onclick="openModal('register')" data-vi="Bắt đầu săn vé ngay" data-en="Start Hunting Now">Bắt đầu săn vé ngay</button>
+          <a href="#destinations" class="btn-hero-sec" data-vi="Khám phá điểm đến" data-en="Explore Destinations">Khám phá điểm đến</a>
+        </div>
+      </div>
+      <div class="scroll-hint">
+        <span data-vi="CUỘN XUỐNG" data-en="SCROLL DOWN">CUỘN XUỐNG</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
 
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "flighthunter-pro-2026-secret")
+    <!-- STATS -->
+    <div class="stats-bar reveal">
+      <div class="stat-item">
+        <div class="stat-num">24/7</div>
+        <div class="stat-desc" data-vi="Hệ thống tự động" data-en="Automated System">Hệ thống tự động</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">50+</div>
+        <div class="stat-desc" data-vi="Điểm đến" data-en="Destinations">Điểm đến</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-desc" data-vi="Miễn phí" data-en="Free to use">Miễn phí</div>
+      </div>
+    </div>
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-DATA_FILE = "fh_data.json"
+    <!-- DESTINATIONS -->
+    <section id="destinations" class="container">
+      <div class="section-label reveal" data-vi="ĐIỂM ĐẾN HOT" data-en="TOP DESTINATIONS">ĐIỂM ĐẾN HOT</div>
+      <h2 class="section-title reveal" data-vi="Khám phá thế giới cùng Flight Hunter" data-en="Explore the world with Flight Hunter">Khám phá thế giới cùng Flight Hunter</h2>
+      <p class="section-sub reveal" data-vi="Những chặng bay có giá tốt nhất được hệ thống cập nhật liên tục mỗi ngày." data-en="The best flight routes updated continuously by our system every day.">Những chặng bay có giá tốt nhất được hệ thống cập nhật liên tục mỗi ngày.</p>
+      
+      <div class="dest-grid reveal" id="dest-grid-container">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
 
-# ─── DATA SYSTEM ───
-DOMESTIC_AIRPORTS = [
-    {"code":"SGN","name_vi":"SGN — TP. Hồ Chí Minh","name_en":"SGN — Ho Chi Minh City"},
-    {"code":"HAN","name_vi":"HAN — Hà Nội","name_en":"HAN — Hanoi"},
-    {"code":"DAD","name_vi":"DAD — Đà Nẵng","name_en":"DAD — Da Nang"},
-    {"code":"CXR","name_vi":"CXR — Nha Trang","name_en":"CXR — Nha Trang"},
-    {"code":"PQC","name_vi":"PQC — Phú Quốc","name_en":"PQC — Phu Quoc"},
-    {"code":"VCA","name_vi":"VCA — Cần Thơ","name_en":"VCA — Can Tho"},
-    {"code":"HPH","name_vi":"HPH — Hải Phòng","name_en":"HPH — Hai Phong"},
-    {"code":"HUI","name_vi":"HUI — Huế","name_en":"HUI — Hue"},
-    {"code":"VII","name_vi":"VII — Vinh","name_en":"VII — Vinh"},
-    {"code":"BMV","name_vi":"BMV — Buôn Ma Thuột","name_en":"BMV — Buon Ma Thuot"},
-    {"code":"UIH","name_vi":"UIH — Quy Nhơn","name_en":"UIH — Quy Nhon"},
-    {"code":"VCL","name_vi":"VCL — Chu Lai","name_en":"VCL — Chu Lai"},
-]
+    <!-- AIRLINES -->
+    <section id="airlines" class="airlines-bg">
+      <div class="container">
+        <div class="section-label reveal" data-vi="ĐỐI TÁC HÀNG KHÔNG" data-en="AIRLINE PARTNERS">ĐỐI TÁC HÀNG KHÔNG</div>
+        <h2 class="section-title reveal" data-vi="Hỗ trợ quét vé mọi hãng bay" data-en="Scan tickets from all airlines">Hỗ trợ quét vé mọi hãng bay</h2>
+        <div class="airline-scroll reveal" id="airline-container">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
 
-INTERNATIONAL_AIRPORTS = [
-    {"code":"BKK","name_vi":"BKK — Bangkok, Thái Lan","name_en":"BKK — Bangkok, Thailand"},
-    {"code":"SIN","name_vi":"SIN — Singapore","name_en":"SIN — Singapore"},
-    {"code":"KUL","name_vi":"KUL — Kuala Lumpur, Malaysia","name_en":"KUL — Kuala Lumpur, Malaysia"},
-    {"code":"HKG","name_vi":"HKG — Hồng Kông","name_en":"HKG — Hong Kong"},
-    {"code":"NRT","name_vi":"NRT — Tokyo, Nhật Bản","name_en":"NRT — Tokyo, Japan"},
-    {"code":"ICN","name_vi":"ICN — Seoul, Hàn Quốc","name_en":"ICN — Seoul, South Korea"},
-    {"code":"CDG","name_vi":"CDG — Paris, Pháp","name_en":"CDG — Paris, France"},
-    {"code":"LHR","name_vi":"LHR — London, Anh","name_en":"LHR — London, UK"},
-    {"code":"SYD","name_vi":"SYD — Sydney, Úc","name_en":"SYD — Sydney, Australia"},
-    {"code":"LAX","name_vi":"LAX — Los Angeles, Mỹ","name_en":"LAX — Los Angeles, USA"},
-    {"code":"DXB","name_vi":"DXB — Dubai, UAE","name_en":"DXB — Dubai, UAE"},
-    {"code":"PEK","name_vi":"PEK — Bắc Kinh, Trung Quốc","name_en":"PEK — Beijing, China"},
-    {"code":"TPE","name_vi":"TPE — Đài Bắc, Đài Loan","name_en":"TPE — Taipei, Taiwan"},
-    {"code":"MNL","name_vi":"MNL — Manila, Philippines","name_en":"MNL — Manila, Philippines"},
-]
+    <!-- HOW IT WORKS -->
+    <section class="container">
+      <div class="section-label reveal" data-vi="HƯỚNG DẪN" data-en="HOW IT WORKS">HƯỚNG DẪN</div>
+      <h2 class="section-title reveal" data-vi="3 Bước săn vé đơn giản" data-en="3 Simple steps to hunt tickets">3 Bước săn vé đơn giản</h2>
+      
+      <div class="steps-grid reveal">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-icon">🎯</div>
+          <div class="step-title" data-vi="Cài đặt thông số" data-en="Set parameters">Cài đặt thông số</div>
+          <div class="step-desc" data-vi="Đăng nhập vào Dashboard, chọn chặng bay, ngày đi và mức giá kỳ vọng của bạn." data-en="Log into the Dashboard, select your route, date, and expected price.">Đăng nhập vào Dashboard, chọn chặng bay, ngày đi và mức giá kỳ vọng của bạn.</div>
+          <div class="connector">➔</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-icon">🤖</div>
+          <div class="step-title" data-vi="Hệ thống tự quét" data-en="System Auto-scans">Hệ thống tự quét</div>
+          <div class="step-desc" data-vi="Bot Flight Hunter sẽ liên tục quét dữ liệu từ các hãng và đại lý mỗi 15 phút." data-en="Flight Hunter Bot will continuously scan data from airlines every 15 minutes.">Bot Flight Hunter sẽ liên tục quét dữ liệu từ các hãng và đại lý mỗi 15 phút.</div>
+          <div class="connector">➔</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-icon">📲</div>
+          <div class="step-title" data-vi="Nhận thông báo" data-en="Get Alerts">Nhận thông báo</div>
+          <div class="step-desc" data-vi="Ngay khi có vé rớt giá xuống mức bạn cài đặt, bot sẽ gửi tin nhắn Telegram lập tức." data-en="As soon as a ticket drops to your price, the bot sends an instant Telegram alert.">Ngay khi có vé rớt giá xuống mức bạn cài đặt, bot sẽ gửi tin nhắn Telegram lập tức.</div>
+        </div>
+      </div>
+    </section>
 
-AIRLINES = [
-    {"code":"ALL","name_vi":"Tất cả hãng bay","name_en":"All Airlines","logo":"✈"},
-    {"code":"VJ","name_vi":"VietJet Air","name_en":"VietJet Air","logo":"🔴"},
-    {"code":"VN","name_vi":"Vietnam Airlines","name_en":"Vietnam Airlines","logo":"🟡"},
-    {"code":"QH","name_vi":"Bamboo Airways","name_en":"Bamboo Airways","logo":"🟢"},
-    {"code":"BL","name_vi":"Pacific Airlines","name_en":"Pacific Airlines","logo":"🔵"},
-    {"code":"TG","name_vi":"Thai Airways","name_en":"Thai Airways","logo":"🟣"},
-    {"code":"SQ","name_vi":"Singapore Airlines","name_en":"Singapore Airlines","logo":"⭐"},
-    {"code":"CX","name_vi":"Cathay Pacific","name_en":"Cathay Pacific","logo":"🌐"},
-    {"code":"EK","name_vi":"Emirates","name_en":"Emirates","logo":"🏅"},
-    {"code":"JL","name_vi":"Japan Airlines","name_en":"Japan Airlines","logo":"🎌"},
-    {"code":"KE","name_vi":"Korean Air","name_en":"Korean Air","logo":"🇰🇷"},
-]
+    <!-- HOTELS -->
+    <section id="hotels" class="container" style="background:var(--gray); border-radius:30px; margin-bottom:80px;">
+      <div class="section-label reveal" data-vi="DỊCH VỤ ĐÍNH KÈM" data-en="ADDITIONAL SERVICES">DỊCH VỤ ĐÍNH KÈM</div>
+      <h2 class="section-title reveal" data-vi="Khách sạn & Khu nghỉ dưỡng" data-en="Hotels & Resorts">Khách sạn & Khu nghỉ dưỡng</h2>
+      <p class="section-sub reveal" data-vi="Hoàn thiện chuyến đi của bạn với những lựa chọn lưu trú đẳng cấp." data-en="Complete your trip with premium accommodation choices.">Hoàn thiện chuyến đi của bạn với những lựa chọn lưu trú đẳng cấp.</p>
+      
+      <div class="hotels-grid reveal" id="hotel-container">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
 
-TRIP_SUGGESTIONS = [
-    {"from":"SGN","to":"DAD","price":890000,"label_vi":"Đà Nẵng - Hội An","label_en":"Da Nang - Hoi An","img":"🌊","desc_vi":"Biển xanh, phố cổ, ẩm thực tuyệt vời","desc_en":"Blue sea, ancient town, amazing cuisine"},
-    {"from":"HAN","to":"PQC","price":1200000,"label_vi":"Phú Quốc - Đảo Ngọc","label_en":"Phu Quoc - Pearl Island","img":"🏝","desc_vi":"Thiên đường nhiệt đới, snorkeling tuyệt đỉnh","desc_en":"Tropical paradise, top snorkeling"},
-    {"from":"SGN","to":"NRT","price":7500000,"label_vi":"Tokyo - Nhật Bản","label_en":"Tokyo - Japan","img":"🗼","desc_vi":"Hoa anh đào, ẩm thực Nhật, văn hóa độc đáo","desc_en":"Cherry blossoms, Japanese cuisine, unique culture"},
-    {"from":"HAN","to":"BKK","price":3200000,"label_vi":"Bangkok - Thái Lan","label_en":"Bangkok - Thailand","img":"🛕","desc_vi":"Chợ đêm, chùa vàng, ẩm thực đường phố","desc_en":"Night markets, golden temples, street food"},
-    {"from":"SGN","to":"SIN","price":2800000,"label_vi":"Singapore","label_en":"Singapore","img":"🦁","desc_vi":"Gardens by the Bay, Marina Bay Sands","desc_en":"Gardens by the Bay, Marina Bay Sands"},
-    {"from":"DAD","to":"HAN","price":750000,"label_vi":"Hà Nội - Thủ Đô","label_en":"Hanoi - Capital","img":"🏛","desc_vi":"Hồ Hoàn Kiếm, phố cổ, bún chả","desc_en":"Hoan Kiem Lake, old quarter, bun cha"},
-]
+    <!-- HELP / FAQ -->
+    <section id="help" class="help-bg">
+      <div class="container" style="max-width:800px;">
+        <div class="section-label reveal" data-vi="TRỢ GIÚP" data-en="HELP">TRỢ GIÚP</div>
+        <h2 class="section-title reveal" data-vi="Câu hỏi thường gặp" data-en="Frequently Asked Questions">Câu hỏi thường gặp</h2>
+        
+        <div class="faq-list reveal">
+          <div class="faq-item">
+            <div class="faq-q"><span data-vi="Hệ thống này có miễn phí không?" data-en="Is this system free?">Hệ thống này có miễn phí không?</span><span class="arrow">▼</span></div>
+            <div class="faq-a" data-vi="Có, Flight Hunter Pro hoàn toàn miễn phí cho người dùng cá nhân." data-en="Yes, Flight Hunter Pro is completely free for personal users.">Có, Flight Hunter Pro hoàn toàn miễn phí cho người dùng cá nhân.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q"><span data-vi="Làm sao để liên kết Telegram?" data-en="How to link Telegram?">Làm sao để liên kết Telegram?</span><span class="arrow">▼</span></div>
+            <div class="faq-a" data-vi="Trong Dashboard có mục cấu hình Chat ID. Bạn chỉ cần chat với bot của chúng tôi trên Telegram để lấy ID." data-en="In the Dashboard, there is a Chat ID config. Just chat with our bot on Telegram to get your ID.">Trong Dashboard có mục cấu hình Chat ID. Bạn chỉ cần chat với bot của chúng tôi trên Telegram để lấy ID.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q"><span data-vi="Bot quét vé bao lâu một lần?" data-en="How often does the bot scan?">Bot quét vé bao lâu một lần?</span><span class="arrow">▼</span></div>
+            <div class="faq-a" data-vi="Mặc định là 15 phút một lần để tránh bị chặn bởi các hãng hàng không." data-en="Default is every 15 minutes to avoid being blocked by airlines.">Mặc định là 15 phút một lần để tránh bị chặn bởi các hãng hàng không.</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-HOTELS = [
-    {"name":"Vinpearl Resort & Spa","city_vi":"Nha Trang","city_en":"Nha Trang","stars":5,"price":2800000,"img":"🏨","tag_vi":"Nghỉ dưỡng","tag_en":"Resort"},
-    {"name":"InterContinental Danang","city_vi":"Đà Nẵng","city_en":"Da Nang","stars":5,"price":4200000,"img":"🌅","tag_vi":"Sang trọng","tag_en":"Luxury"},
-    {"name":"Mường Thanh Grand","city_vi":"Hà Nội","city_en":"Hanoi","stars":4,"price":1200000,"img":"🏙","tag_vi":"Kinh doanh","tag_en":"Business"},
-    {"name":"Fusion Maia Resort","city_vi":"Đà Nẵng","city_en":"Da Nang","stars":5,"price":3500000,"img":"🌊","tag_vi":"Spa","tag_en":"Spa"},
-    {"name":"La Siesta Hoi An","city_vi":"Hội An","city_en":"Hoi An","stars":4,"price":1800000,"img":"🏮","tag_vi":"Boutique","tag_en":"Boutique"},
-    {"name":"Rex Hotel Saigon","city_vi":"TP.HCM","city_en":"Ho Chi Minh","stars":4,"price":1500000,"img":"🌃","tag_vi":"Trung tâm","tag_en":"Central"},
-    {"name":"Alma Resort Cam Ranh","city_vi":"Nha Trang","city_en":"Nha Trang","stars":5,"price":3800000,"img":"🏖","tag_vi":"Gia đình","tag_en":"Family"},
-    {"name":"Ninh Van Bay Hideaway","city_vi":"Nha Trang","city_en":"Nha Trang","stars":5,"price":8500000,"img":"⛵","tag_vi":"Bungalow","tag_en":"Bungalow"},
-]
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="nav-name">Flight<span>Hunter</span> Pro</div>
+          <p class="footer-tagline" data-vi="Hệ thống săn vé tự động thông minh hàng đầu Việt Nam." data-en="Vietnam's leading smart automated flight hunting system.">Hệ thống săn vé tự động thông minh hàng đầu Việt Nam.</p>
+        </div>
+        <div class="footer-col">
+          <h4 data-vi="Liên kết" data-en="Links">Liên kết</h4>
+          <a href="#destinations" data-vi="Điểm đến" data-en="Destinations">Điểm đến</a>
+          <a href="#airlines" data-vi="Hãng bay" data-en="Airlines">Hãng bay</a>
+          <a href="#hotels" data-vi="Khách sạn" data-en="Hotels">Khách sạn</a>
+        </div>
+        <div class="footer-col">
+          <h4 data-vi="Pháp lý" data-en="Legal">Pháp lý</h4>
+          <a href="#" data-vi="Điều khoản" data-en="Terms">Điều khoản</a>
+          <a href="#" data-vi="Bảo mật" data-en="Privacy">Bảo mật</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="copyright">© 2026 Flight Hunter Pro. All rights reserved.</div>
+        <div class="footer-email">✉ support@flighthunter.pro</div>
+      </div>
+    </footer>
 
-ATTRACTIONS = [
-    {"name_vi":"Vịnh Hạ Long","name_en":"Ha Long Bay","city_vi":"Quảng Ninh","city_en":"Quang Ninh","price":850000,"img":"⛰","type_vi":"Di sản UNESCO","type_en":"UNESCO Heritage","rating":4.9},
-    {"name_vi":"Phố Cổ Hội An","name_en":"Hoi An Ancient Town","city_vi":"Hội An","city_en":"Hoi An","price":120000,"img":"🏮","type_vi":"Di sản văn hóa","type_en":"Cultural Heritage","rating":4.8},
-    {"name_vi":"Bà Nà Hills","name_en":"Ba Na Hills","city_vi":"Đà Nẵng","city_en":"Da Nang","price":750000,"img":"🎡","type_vi":"Khu vui chơi","type_en":"Theme Park","rating":4.7},
-    {"name_vi":"VinWonders Phú Quốc","name_en":"VinWonders Phu Quoc","city_vi":"Phú Quốc","city_en":"Phu Quoc","price":950000,"img":"🎢","type_vi":"Công viên giải trí","type_en":"Amusement Park","rating":4.8},
-    {"name_vi":"Cố Đô Huế","name_en":"Hue Imperial City","city_vi":"Huế","city_en":"Hue","price":200000,"img":"🏰","type_vi":"Di tích lịch sử","type_en":"Historical Site","rating":4.6},
-    {"name_vi":"Mũi Né - Phan Thiết","name_en":"Mui Ne - Phan Thiet","city_vi":"Bình Thuận","city_en":"Binh Thuan","price":0,"img":"🏜","type_vi":"Thiên nhiên","type_en":"Nature","rating":4.5},
-    {"name_vi":"Safari Phú Quốc","name_en":"Phu Quoc Safari","city_vi":"Phú Quốc","city_en":"Phu Quoc","price":600000,"img":"🦁","type_vi":"Động vật hoang dã","type_en":"Wildlife","rating":4.7},
-    {"name_vi":"Sun World Hạ Long","name_en":"Sun World Ha Long","city_vi":"Quảng Ninh","city_en":"Quang Ninh","price":400000,"img":"🎠","type_vi":"Khu vui chơi","type_en":"Theme Park","rating":4.6},
-]
-
-def load_data():
-    default = {
-        "users": {"admin": {"password":"123456","email":"admin@example.com"}},
-        "config": {"origin":"SGN","destination":"DAD","fly_date":(datetime.now()+timedelta(days=7)).strftime("%Y-%m-%d"),
-                   "threshold":2500000,"interval":15,"is_active":False,"airline":"ALL","route_type":"domestic",
-                   "hotel_city":"Đà Nẵng","hotel_threshold":1000000},
-        "stats": {"scan_count":0,"alert_count":0,"last_scan":"—","cheapest":"—"},
-        "results":[],"hotel_results":[],"logs":[]
-    }
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE,"r",encoding="utf-8") as f: d=json.load(f)
-            d.setdefault("users",default["users"]); d.setdefault("config",default["config"])
-            for u,v in d["users"].items():
-                if isinstance(v, str): d["users"][u] = {"password":v,"email":""}
-            return d
-        except: pass
-    return default
-
-def save_data():
-    try:
-        with open(DATA_FILE,"w",encoding="utf-8") as f: json.dump(state,f,ensure_ascii=False,indent=2)
-    except Exception as e: logger.error(e)
-
-state = load_data()
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN","123:FAKE")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID","123")
-
-def add_log(msg, t="info"):
-    ts = datetime.now().strftime("%H:%M:%S")
-    state["logs"].insert(0,{"time":ts,"text":msg,"type":t})
-    if len(state["logs"])>50: state["logs"].pop()
-    save_data()
-
-def run_flight_scan(cfg):
-    flights=[]
-    base = 900000
-    if cfg.get("route_type","domestic") == "international": base = 4000000
-    airlines_pool = [a for a in AIRLINES[1:] if cfg["airline"]=="ALL" or a["code"]==cfg["airline"]]
-    if not airlines_pool: airlines_pool = AIRLINES[1:4]
-    random.seed(int(time.time()))
-    for a in airlines_pool[:5]:
-        price = int(base + random.randint(100000, base*0.6))
-        if a["code"]=="VN": price = int(price*1.15)
-        if a["code"]=="SQ" or a["code"]=="EK": price = int(price*1.3)
-        h=random.randint(5,22); m=random.choice([0,15,30,45])
-        flights.append({"id":f"{a['code']}-{random.randint(100,999)}","airline":a["name_vi"],"airline_logo":a["logo"],
-            "time_window":f"{h:02d}:{m:02d} → {(h+2)%24:02d}:{m:02d}","price":price,
-            "link":f"https://www.traveloka.com/vi-vn/flight/search?ap={cfg['origin']}.{cfg['destination']}"})
-    flights.sort(key=lambda x:x["price"])
-    return flights
-
-def execute_scan(force=False):
-    cfg=state["config"]; state["stats"]["scan_count"]+=1; state["stats"]["last_scan"]=datetime.now().strftime("%H:%M")
-    try:
-        flights=run_flight_scan(cfg); state["results"]=flights
-        if flights:
-            c=flights[0]; state["stats"]["cheapest"]=f"{c['price']:,} ₫"
-            add_log(f"Quét thành công! Vé {cfg['origin']}→{cfg['destination']}: {c['price']:,} ₫","success")
-            if c["price"]<=int(cfg["threshold"]) or force:
-                state["stats"]["alert_count"]+=1
-                msg=f"✈️ <b>FLIGHT HUNTER</b>\n📍 {cfg['origin']}→{cfg['destination']}\n📅 {cfg['fly_date']}\n💵 <b>{c['price']:,} ₫</b>\n👉 <a href='{c['link']}'>ĐẶT VÉ</a>"
-                requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",json={"chat_id":TELEGRAM_CHAT_ID,"text":msg,"parse_mode":"HTML"},timeout=8)
-    except Exception as e: add_log(f"Lỗi: {e}","error")
-    save_data()
-
-def background_worker():
-    while True:
-        cfg = state["config"]
-        if cfg.get("is_active", False):
-            execute_scan()
-            interval = max(5, int(cfg.get("interval", 15)))
-            time.sleep(interval)
-        else:
-            time.sleep(5)
-
-threading.Thread(target=background_worker, daemon=True).start()
-
-# ════════════════════════════════════════════════
-# VIEW TEMPLATES
-# ════════════════════════════════════════════════
-LANDING_HTML = r"""<!DOCTYPE html>
-<html lang="vi" id="html-root">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Flight Hunter Pro — Săn Vé Thông Minh</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --emerald:#10b981;--emerald-light:#34d399;--emerald-dark:#059669;
-  --gold:#f59e0b;--navy:#0a1628;--navy2:#0d2137;
-  --white:#ffffff;--gray:#f8fafc;--text:#1e293b;--muted:#64748b;
-}*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
-body{font-family:'Be Vietnam Pro',sans-serif;color:var(--text);overflow-x:hidden;background:#fdfdfd}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;transition:all 0.3s;background:rgba(10,22,40,0.85);backdrop-filter:blur(8px)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
-.nav-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:white}.nav-name span{color:var(--emerald-light)}
-.nav-links{display:flex;align-items:center;gap:12px}
-.nav-link{color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.85rem;font-weight:500;padding:6px 14px;border-radius:20px;transition:all 0.2s}
-.nav-link:hover{color:white;background:rgba(255,255,255,0.1)}
-.nav-lang{background:rgba(255,255,255,0.15);color:white;padding:6px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;cursor:pointer;border:none}
-.btn-nav-login{background:transparent;border:1.5px solid rgba(255,255,255,0.5);color:white;padding:8px 20px;border-radius:22px;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
-.btn-nav-login:hover{border-color:var(--emerald-light);color:var(--emerald-light)}
-.btn-nav-register{background:linear-gradient(135deg,var(--emerald),var(--emerald-dark));color:white;border:none;padding:8px 20px;border-radius:22px;font-size:0.85rem;font-weight:700;cursor:pointer}
-.hero{height:85vh;position:relative;display:flex;align-items:center;background:linear-gradient(135deg,#0d2137 0%,#0a1628 100%);color:white;padding:0 40px;text-align:center}
-.hero-content{max-width:800px;margin:0 auto}
-.hero-title{font-family:'Playfair Display',serif;font-size:3.5rem;margin-bottom:20px;line-height:1.2}
-.hero-title span{color:var(--emerald-light)}
-.hero-sub{font-size:1.1rem;color:rgba(255,255,255,0.75);margin-bottom:30px}
-.stats-bar{background:white;padding:24px;display:flex;justify-content:center;gap:60px;box-shadow:0 4px 20px rgba(0,0,0,0.05);margin-top:-40px;position:relative;z-index:10;border-radius:12px;max-width:1000px;margin-left:auto;margin-right:auto}
-.stat-item{text-align:center}.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--emerald)}
-.stat-desc{font-size:0.8rem;color:var(--muted)}
-section{padding:60px 40px}.container{max-width:1200px;margin:0 auto}
-.section-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--navy);margin-bottom:8px}
-.section-sub{color:var(--muted);margin-bottom:30px;font-size:0.95rem}
-.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
-.card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.05);border:1px solid #f0f4f8;transition:transform 0.2s}
-.card:hover{transform:translateY(-5px)}
-.card-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:4rem;background:#f1f5f9}
-.card-body{padding:20px}.card-title{font-weight:700;font-size:1.1rem;margin-bottom:6px;color:var(--navy)}
-.card-desc{font-size:0.85rem;color:var(--muted);margin-bottom:12px}
-.card-footer{display:flex;justify-content:space-between;align-items:center}
-.card-price{font-weight:800;color:var(--emerald);font-size:1.1rem}
-.btn-action{background:var(--emerald);color:white;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.85rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal-box{background:white;border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.2);position:relative}
-.modal-header{background:var(--navy);color:white;padding:20px;text-align:center}
-.modal-body{padding:24px}
-.field{margin-bottom:14px}.field label{font-size:0.75rem;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase}
-.field input{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;outline:none}
-.btn-modal{width:100%;padding:12px;background:var(--emerald);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer}
-.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:white;font-size:1.2rem;cursor:pointer}
-footer{background:var(--navy);color:rgba(255,255,255,0.6);padding:40px;text-align:center;font-size:0.85rem;margin-top:60px}
-</style>
-</head>
-<body>
-
-<nav>
-  <a href="/" class="nav-brand">
-    <div class="nav-logo">✈</div>
-    <div class="nav-name">Flight<span>Hunter</span></div>
-  </a>
-  <div class="nav-links">
-    <button class="nav-lang" onclick="toggleLang()" id="lang-btn">EN</button>
-    <button class="btn-nav-login" onclick="openModal('login')">Đăng nhập</button>
-    <button class="btn-nav-register" onclick="openModal('register')">Đăng ký</button>
-  </div>
-</nav>
-
-<section class="hero">
-  <div class="hero-content">
-    <h1 class="hero-title" id="hero-title">Săn Vé Máy Bay <span>Giá Rẻ Tự Động</span></h1>
-    <p class="hero-sub" id="hero-sub">Hệ thống liên tục theo dõi và gửi thông báo trực tiếp qua Telegram ngay khi tìm thấy vé hời.</p>
-    <button class="btn-nav-register" style="padding:14px 32px; font-size:1rem" onclick="openModal('register')">Bắt đầu miễn phí</button>
-  </div>
-</section>
-
-<div class="stats-bar">
-  <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-desc">Uptime Tracking</div></div>
-  <div class="stat-item"><div class="stat-num">10,000+</div><div class="stat-desc">Alerts Sent</div></div>
-  <div class="stat-item"><div class="stat-num">&lt; 5s</div><div class="stat-desc">Telegram Speed</div></div>
-</div>
-
-<section class="container">
-  <h2 class="section-title">Điểm Đến Phổ Biến</h2>
-  <p class="section-sub">Ý tưởng tuyệt vời cho chuyến đi tiếp theo của bạn.</p>
-  <div class="grid-3">
-    {% for t in suggestions %}
-    <div class="card">
-      <div class="card-img">{{ t.img }}</div>
-      <div class="card-body">
-        <h3 class="card-title" data-vi="{{ t.label_vi }}" data-en="{{ t.label_en }}">{{ t.label_vi }}</h3>
-        <p class="card-desc" data-vi="{{ t.desc_vi }}" data-en="{{ t.desc_en }}">{{ t.desc_vi }}</p>
-        <div class="card-footer">
-          <span class="card-price">{{ "{:,}".format(t.price) }} ₫</span>
-          <button class="btn-action" onclick="openModal('login')">Săn vé</button>
+    <!-- MODAL AUTH -->
+    <div class="modal-overlay" id="authModal">
+      <div class="modal-box">
+        <div class="modal-wrap">
+          <button class="modal-close" onclick="closeModal()">✕</button>
+          <div class="modal-header">
+            <div class="modal-logo">✈</div>
+            <div class="modal-title" data-vi="Chào mừng trở lại" data-en="Welcome back">Chào mừng trở lại</div>
+            <div class="modal-sub" data-vi="Đăng nhập để truy cập Dashboard" data-en="Login to access Dashboard">Đăng nhập để truy cập Dashboard</div>
+          </div>
+          <div class="modal-body">
+            <div class="modal-tabs">
+              <button class="modal-tab active" id="tab-login" onclick="switchTab('login')" data-vi="ĐĂNG NHẬP" data-en="LOGIN">ĐĂNG NHẬP</button>
+              <button class="modal-tab" id="tab-register" onclick="switchTab('register')" data-vi="ĐĂNG KÝ" data-en="REGISTER">ĐĂNG KÝ</button>
+            </div>
+            
+            <div id="alert-box" class="modal-alert" style="display:none"></div>
+            
+            <form id="authForm" onsubmit="handleAuth(event)">
+              <div class="field">
+                <label data-vi="TÊN ĐĂNG NHẬP" data-en="USERNAME">TÊN ĐĂNG NHẬP</label>
+                <input type="text" id="username" required placeholder="admin">
+              </div>
+              <div class="field">
+                <label data-vi="MẬT KHẨU" data-en="PASSWORD">MẬT KHẨU</label>
+                <input type="password" id="password" required placeholder="••••••">
+              </div>
+              <button type="submit" class="btn-modal" id="btn-submit" data-vi="VÀO DASHBOARD" data-en="ENTER DASHBOARD">VÀO DASHBOARD</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-    {% endfor %}
-  </div>
-</section>
 
-<section class="container" style="background:#f8fafc; border-radius:20px; padding:40px">
-  <h2 class="section-title">Khách Sạn Hàng Đầu</h2>
-  <p class="section-sub">Nơi lưu trú lý tưởng với ưu đãi độc quyền.</p>
-  <div class="grid-3">
-    {% for h in hotels %}
-    <div class="card">
-      <div class="card-img" style="background:#e2e8f0">{{ h.img }}</div>
-      <div class="card-body">
-        <h3 class="card-title">{{ h.name }}</h3>
-        <p class="card-desc" data-vi="Thành phố: {{ h.city_vi }} | {{ h.tag_vi }}" data-en="City: {{ h.city_en }} | {{ h.tag_en }}">Thành phố: {{ h.city_vi }} | {{ h.tag_vi }}</p>
-        <div class="card-footer">
-          <span class="card-price" style="color:var(--gold)">{{ "{:,}".format(h.price) }} ₫ / đêm</span>
-          <button class="btn-action" style="background:var(--navy)" onclick="openModal('login')">Đặt phòng</button>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
+    <!-- JAVASCRIPT -->
+    <script>
+      // DATA FROM FLASK
+      const trips = {{ trips | tojson | safe }};
+      const airlines = {{ airlines | tojson | safe }};
+      const hotels = {{ hotels | tojson | safe }};
+      
+      let currentLang = 'vi';
+      let currentAuthMode = 'login';
 
-<section class="container">
-  <h2 class="section-title">Khu Du Lịch & Trải Nghiệm</h2>
-  <p class="section-sub">Khám phá danh lam thắng cảnh hàng đầu Việt Nam.</p>
-  <div class="grid-3">
-    {% for a in attractions %}
-    <div class="card">
-      <div class="card-img" style="background:#f1f5f9">{{ a.img }}</div>
-      <div class="card-body">
-        <h3 class="card-title" data-vi="{{ a.name_vi }}" data-en="{{ a.name_en }}">{{ a.name_vi }}</h3>
-        <p class="card-desc" data-vi="Loại hình: {{ a.type_vi }} (⭐ {{ a.rating }})" data-en="Type: {{ a.type_en }} (⭐ {{ a.rating }})">Loại hình: {{ a.type_vi }} (⭐ {{ a.rating }})</p>
-        <div class="card-footer">
-          <span class="card-price">Vé: {% if a.price == 0 %}Miễn phí{% else %}{{ "{:,}".format(a.price) }} ₫{% endif %}</span>
-          <button class="btn-action" style="background:var(--emerald-dark)" onclick="openModal('login')">Khám phá</button>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
+      // --- RENDERING ---
+      function renderData() {
+        // Render Trips
+        const destHtml = trips.map((t, i) => `
+          <a href="#" class="dest-card">
+            <div class="dest-img d${(i%6)+1}">
+              ${t.img}
+              <div class="dest-badge">HOT</div>
+            </div>
+            <div class="dest-body">
+              <div class="dest-name">${currentLang === 'vi' ? t.label_vi : t.label_en}</div>
+              <div class="dest-desc">${currentLang === 'vi' ? t.desc_vi : t.desc_en}</div>
+              <div class="dest-price">
+                <div>
+                  <div class="dest-from" data-vi="Chỉ từ" data-en="From">Chỉ từ</div>
+                  <div class="dest-amount">${t.price.toLocaleString('vi-VN')} ₫</div>
+                </div>
+                <button class="dest-book" data-vi="Săn ngay" data-en="Hunt Now">Săn ngay</button>
+              </div>
+            </div>
+          </a>
+        `).join('');
+        document.getElementById('dest-grid-container').innerHTML = destHtml;
 
-<div class="modal-overlay" id="auth-modal">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()">×</button>
-    <div class="modal-header">
-      <h3 id="modal-title">Đăng nhập</h3>
-    </div>
-    <div class="modal-body">
-      <div id="modal-alert" style="color:red; font-size:0.85rem; margin-bottom:10px; display:none"></div>
-      <form id="auth-form" onsubmit="handleAuth(event)">
-        <input type="hidden" id="auth-type" value="login">
-        <div class="field">
-          <label>Tài khoản (Username)</label>
-          <input type="text" id="username" required value="admin">
-        </div>
-        <div class="field" id="email-field" style="display:none">
-          <label>Email</label>
-          <input type="email" id="email">
-        </div>
-        <div class="field">
-          <label>Mật khẩu</label>
-          <input type="password" id="password" required value="123456">
-        </div>
-        <button type="submit" class="btn-modal" id="btn-submit">Đăng nhập</button>
-      </form>
-    </div>
-  </div>
-</div>
+        // Render Airlines
+        const airHtml = airlines.slice(1).map(a => `
+          <div class="airline-card">
+            <div class="airline-logo">${a.logo}</div>
+            <div class="airline-name">${currentLang === 'vi' ? a.name_vi : a.name_en}</div>
+          </div>
+        `).join('');
+        document.getElementById('airline-container').innerHTML = airHtml;
 
-<footer>
-  <p>© 2026 Flight Hunter Pro. Nền tảng săn vé tự động thông minh hàng đầu.</p>
-</footer>
+        // Render Hotels
+        const hotHtml = hotels.slice(0,4).map((h, i) => `
+          <div class="hotel-card">
+            <div class="hotel-img h${(i%4)+1}">
+              ${h.img}
+              <div class="hotel-stars">${'⭐'.repeat(h.stars)}</div>
+            </div>
+            <div class="hotel-body">
+              <span class="hotel-tag">${currentLang === 'vi' ? h.tag_vi : h.tag_en}</span>
+              <div class="hotel-name">${h.name}</div>
+              <div class="hotel-city">📍 ${currentLang === 'vi' ? h.city_vi : h.city_en}</div>
+              <div class="hotel-price">
+                <div>
+                  <div class="hotel-amount">${h.price.toLocaleString('vi-VN')} ₫</div>
+                  <div class="hotel-per" data-vi="/ đêm" data-en="/ night">/ đêm</div>
+                </div>
+                <button class="btn-book-hotel" data-vi="Chi tiết" data-en="Details">Chi tiết</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('hotel-container').innerHTML = hotHtml;
+        
+        applyLangStrings();
+      }
 
-<script>
-let currentLang = 'vi';
-const trans = {
-  en: {
-    title: "Automated Flight Hunter <span>Pro</span>",
-    sub: "Continuous tracking and real-time alerts straight to your Telegram when bargains arrive.",
-    login: "Login", signup: "Sign Up", username: "Username", password: "Password"
-  },
-  vi: {
-    title: "Săn Vé Máy Bay <span>Giá Rẻ Tự Động</span>",
-    sub: "Hệ thống liên tục theo dõi và gửi thông báo trực tiếp qua Telegram ngay khi tìm thấy vé hời.",
-    login: "Đăng nhập", signup: "Đăng ký", username: "Tài khoản", password: "Mật khẩu"
-  }
-};
+      // --- LANGUAGE TOGGLE ---
+      function toggleLang() {
+        currentLang = currentLang === 'vi' ? 'en' : 'vi';
+        document.getElementById('lang-btn').innerText = currentLang === 'vi' ? 'EN' : 'VI';
+        renderData();
+      }
 
-function toggleLang() {
-  currentLang = currentLang === 'vi' ? 'en' : 'vi';
-  document.getElementById('lang-btn').innerText = currentLang === 'vi' ? 'EN' : 'VI';
-  document.getElementById('hero-title').innerHTML = trans[currentLang].title;
-  document.getElementById('hero-sub').innerText = trans[currentLang].sub;
-  
-  document.querySelectorAll('[data-vi]').forEach(el => {
-    el.innerText = el.getAttribute('data-' + currentLang);
-  });
-}
+      function applyLangStrings() {
+        document.querySelectorAll('[data-vi]').forEach(el => {
+          el.innerText = el.getAttribute(`data-${currentLang}`);
+        });
+      }
 
-function openModal(type) {
-  document.getElementById('auth-type').value = type;
-  document.getElementById('modal-title').innerText = type === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản';
-  document.getElementById('btn-submit').innerText = type === 'login' ? 'Đăng nhập' : 'Đăng ký';
-  document.getElementById('email-field').style.display = type === 'login' ? 'none' : 'block';
-  document.getElementById('auth-modal').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('auth-modal').classList.remove('open');
-}
-async function handleAuth(e) {
-  e.preventDefault();
-  const type = document.getElementById('auth-type').value;
-  const u = document.getElementById('username').value;
-  const p = document.getElementById('password').value;
-  const em = document.getElementById('email').value;
-  
-  const res = await fetch('/api/auth', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: type, username: u, password: p, email: em})
-  });
-  const data = await res.json();
-  if(data.success) {
-    window.location.href = '/dashboard';
-  } else {
-    const alertBox = document.getElementById('modal-alert');
-    alertBox.innerText = data.msg;
-    alertBox.style.display = 'block';
-  }
-}
-</script>
+      // --- UI INTERACTIONS ---
+      window.addEventListener('scroll', () => {
+        const nav = document.getElementById('main-nav');
+        if (window.scrollY > 50) nav.classList.add('scrolled');
+        else nav.classList.remove('scrolled');
+
+        document.querySelectorAll('.reveal').forEach(el => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight - 50) {
+            el.classList.add('visible');
+          }
+        });
+      });
+
+      // FAQ
+      document.querySelectorAll('.faq-q').forEach(q => {
+        q.addEventListener('click', () => {
+          const item = q.parentElement;
+          item.classList.toggle('open');
+        });
+      });
+
+      // --- MODAL ---
+      function openModal(mode) {
+        document.getElementById('authModal').classList.add('open');
+        switchTab(mode);
+      }
+      function closeModal() {
+        document.getElementById('authModal').classList.remove('open');
+      }
+      function switchTab(mode) {
+        currentAuthMode = mode;
+        document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+        document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+        
+        const btn = document.getElementById('btn-submit');
+        const alertBox = document.getElementById('alert-box');
+        alertBox.style.display = 'none';
+
+        if (mode === 'login') {
+          btn.setAttribute('data-vi', 'VÀO DASHBOARD');
+          btn.setAttribute('data-en', 'ENTER DASHBOARD');
+        } else {
+          btn.setAttribute('data-vi', 'TẠO TÀI KHOẢN');
+          btn.setAttribute('data-en', 'CREATE ACCOUNT');
+        }
+        applyLangStrings();
+      }
+
+      async function handleAuth(e) {
+        e.preventDefault();
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const alertBox = document.getElementById('alert-box');
+        
+        try {
+          const res = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: currentAuthMode, username: u, password: p })
+          });
+          const data = await res.json();
+          if (data.status === 'ok') {
+            window.location.href = '/dashboard';
+          } else {
+            alertBox.className = 'modal-alert err';
+            alertBox.innerText = data.msg;
+            alertBox.style.display = 'block';
+          }
+        } catch (err) {
+          alert("Network error!");
+        }
+      }
+
+      // Initialize
+      window.onload = () => {
+        renderData();
+        setTimeout(() => window.dispatchEvent(new Event('scroll')), 100);
+      };
+    </script>
 </body>
 </html>
 """
 
-DASHBOARD_HTML = r"""<!DOCTYPE html>
+DASHBOARD_HTML = r"""
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard — Flight Hunter Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --primary: #10b981; --primary-dark: #059669; --bg: #f8fafc;
-  --panel: #ffffff; --text: #1e293b; --border: #e2e8f0;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Be Vietnam Pro', sans-serif; }
-body { background: var(--bg); color: var(--text); padding: 20px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-.brand { font-size: 1.4rem; font-weight: 700; color: #0f172a; }
-.brand span { color: var(--primary); }
-.btn-logout { background: #ef4444; color: white; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
-.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-.panel-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-.stat-box { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 8px; text-align: center; }
-.stat-val { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
-.stat-lbl { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
-.form-group { margin-bottom: 12px; }
-.form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
-select, input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-size: 0.9rem; }
-.btn-submit { background: var(--primary); color: white; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 8px; }
-.btn-submit:hover { background: var(--primary-dark); }
-.log-container { background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; height: 160px; overflow-y: auto; }
-.log-item { margin-bottom: 4px; }
-.log-success { color: #4ade80; }
-.log-error { color: #f87171; }
-.flight-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; }
-.flight-info h4 { font-size: 0.9rem; font-weight: 700; }
-.flight-info p { font-size: 0.75rem; color: #64748b; }
-.flight-price { font-weight: 800; color: var(--primary); font-size: 1rem; }
-.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
-.badge-active { background: #dcfce7; color: #16a34a; }
-.badge-inactive { background: #fee2e2; color: #dc2626; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard — Flight Hunter Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --emerald: #10b981; --navy: #0a1628; }
+    body { font-family: 'Be Vietnam Pro', sans-serif; background: #f8fafc; margin: 0; color: var(--navy); }
+    .header { background: var(--navy); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-weight: 700; font-size: 1.2rem; display:flex; align-items:center; gap:8px; }
+    .logout { color: #f87171; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
+    .stat-val { font-weight: 700; color: var(--emerald); }
+    .btn { display: block; width: 100%; background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; font-size: 1rem; text-decoration: none;}
+    .btn:hover { opacity: 0.9; }
+    .btn.stop { background: #ef4444; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .badge.active { background: #dcfce7; color: #16a34a; }
+    .badge.inactive { background: #fee2e2; color: #dc2626; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+    th { color: #64748b; font-weight: 600; }
+  </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="brand">Flight<span>Hunter</span> Pro</div>
-  <div style="display:flex; align-items:center; gap:12px">
-    <span style="font-size:0.9rem; font-weight:500">Xin chào, <b>{{ session.get('user') }}</b></span>
-    <a href="/logout" class="btn-logout">Đăng xuất</a>
+  <div class="header">
+    <div class="logo">✈ FlightHunter Dashboard</div>
+    <a href="/logout" class="logout">Đăng xuất</a>
   </div>
-</div>
-
-<div class="layout">
-  <div>
-    <div class="panel" style="margin-bottom: 24px;">
-      <div class="panel-title">
-        Cấu Hình Săn Vé Máy Bay
-        <span class="badge {% if config.is_active %}badge-active{% else %}badge-inactive{% endif %}">
-          {% if config.is_active %}Đang chạy{% else %}Tạm dừng{% endif %}
-        </span>
-      </div>
-      <form action="/api/config" method="POST">
-        <div class="form-group">
-          <label>Hệ thống tuyến bay</label>
-          <select name="route_type" onchange="toggleAirports(this.value)">
-            <option value="domestic" {% if config.route_type == 'domestic' %}selected{% endif %}>Nội Địa Việt Nam</option>
-            <option value="international" {% if config.route_type == 'international' %}selected{% endif %}>Quốc Tế</option>
-          </select>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div class="form-group">
-            <label>Điểm đi</label>
-            <select name="origin" id="origin-select"></select>
-          </div>
-          <div class="form-group">
-            <label>Điểm đến</label>
-            <select name="destination" id="dest-select"></select>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div class="form-group">
-            <label>Ngày bay</label>
-            <input type="date" name="fly_date" value="{{ config.fly_date }}">
-          </div>
-          <div class="form-group">
-            <label>Hãng hàng không</label>
-            <select name="airline">
-              {% for a in airlines %}
-              <option value="{{ a.code }}" {% if config.airline == a.code %}selected{% endif %}>{{ a.logo }} {{ a.name_vi }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
-          <div class="form-group">
-            <label>Ngưỡng báo động giá (₫)</label>
-            <input type="number" name="threshold" value="{{ config.threshold }}">
-          </div>
-          <div class="form-group">
-            <label>Tần suất quét (giây)</label>
-            <input type="number" name="interval" min="5" value="{{ config.interval }}">
-          </div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px">
-          <div>
-            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; cursor:pointer">
-              <input type="checkbox" name="is_active" style="width:auto" {% if config.is_active %}checked{% endif %}> Kích hoạt săn vé
-            </label>
-          </div>
-          <button type="submit" class="btn-submit" style="margin-top:0; padding:6px">Lưu cấu hình</button>
-        </div>
-      </form>
-      <form action="/api/scan_now" method="POST" style="margin-top:8px">
-         <button type="submit" class="btn-submit" style="background:#0284c7">Quét & Gửi Telegram Ngay Lập Tức</button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title">Hệ Thống Logs</div>
-      <div class="log-container">
-        {% for l in logs %}
-        <div class="log-item log-{{ l.type }}">[{{ l.time }}] {{ l.text }}</div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-
-  <div>
-    <div class="panel" style="margin-bottom:24px">
-      <div class="panel-title">Thống Kê Quét Vé</div>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-val">{{ stats.scan_count }}</div><div class="stat-lbl">Lần quét</div></div>
-        <div class="stat-box"><div class="stat-val">{{ stats.alert_count }}</div><div class="stat-lbl">Cảnh báo đã phát</div></div>
-        <div class="stat-box"><div class="stat-val" style="font-size:1.1rem; padding:4px 0">{{ stats.last_scan }}</div><div class="stat-lbl">Lần cuối</div></div>
-        <div class="stat-box"><div class="stat-val" style="font-size:1.1rem; padding:4px 0; color:#ef4444">{{ stats.cheapest }}</div><div class="stat-lbl">Giá rẻ nhất hiện tại</div></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title">Kết Quả Tìm Kiếm Mới Nhất</div>
-      <div style="max-height:380px; overflow-y:auto">
-        {% if not results %}
-        <p style="font-size:0.85rem; color:#64748b; text-align:center; padding:20px">Chưa có dữ liệu chuyến bay. Hãy bật kích hoạt hoặc nhấn Quét ngay.</p>
-        {% endif %}
-        {% for f in results %}
-        <div class="flight-item">
-          <div class="flight-info">
-            <h4>{{ f.airline_logo }} {{ f.airline }} ({{ f.id }})</h4>
-            <p>Khung giờ: {{ f.time_window }}</p>
-          </div>
-          <div style="text-align:right">
-            <div class="flight-price">{{ "{:,}".format(f.price) }} ₫</div>
-            <a href="{{ f.link }}" target="_blank" style="font-size:0.75rem; color:var(--primary); font-weight:600">Mở Traveloka</a>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-const domesticAirports = {{ domestic_airports|tojson }};
-const internationalAirports = {{ international_airports|tojson }};
-const currentOrigin = "{{ config.origin }}";
-const currentDest = "{{ config.destination }}";
-
-function toggleAirports(type) {
-  const pool = type === 'international' ? internationalAirports : domesticAirports;
-  const oSel = document.getElementById('origin-select');
-  const dSel = document.getElementById('dest-select');
   
-  oSel.innerHTML = ''; dSel.innerHTML = '';
-  pool.forEach(a => {
-    oSel.options.add(new Option(a.name_vi, a.code));
-    dSel.options.add(new Option(a.name_vi, a.code));
-  });
-  
-  if([...oSel.options].some(o => o.value === currentOrigin)) oSel.value = currentOrigin;
-  if([...dSel.options].some(o => o.value === currentDest)) dSel.value = currentDest;
-}
-toggleAirports("{{ config.route_type }}");
-</script>
+  <div class="container">
+    <div class="grid">
+      <!-- CONTROL CARD -->
+      <div class="card">
+        <h2>Trạng thái Bot</h2>
+        <div class="stat-row">
+          <span>Hoạt động:</span>
+          <span class="badge {{ 'active' if config['is_active'] else 'inactive' }}">{{ 'ĐANG CHẠY' if config['is_active'] else 'ĐÃ DỪNG' }}</span>
+        </div>
+        <div class="stat-row">
+          <span>Số lần quét:</span>
+          <span class="stat-val">{{ stats['scan_count'] }}</span>
+        </div>
+        <div class="stat-row">
+          <span>Lần quét cuối:</span>
+          <span class="stat-val">{{ stats['last_scan'] }}</span>
+        </div>
+        <div class="stat-row">
+          <span>Cảnh báo đã gửi:</span>
+          <span class="stat-val">{{ stats['alert_count'] }}</span>
+        </div>
+        
+        <form method="POST" action="/api/toggle" style="margin-top:20px;">
+          <button type="submit" class="btn {{ 'stop' if config['is_active'] else '' }}">
+            {{ 'DỪNG SĂN VÉ' if config['is_active'] else 'BẬT SĂN VÉ' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- CONFIG CARD -->
+      <div class="card">
+        <h2>Cấu hình săn vé hiện tại</h2>
+        <div class="stat-row"><span>Chặng bay:</span> <b>{{ config['origin'] }} → {{ config['destination'] }}</b></div>
+        <div class="stat-row"><span>Ngày bay:</span> <b>{{ config['fly_date'] }}</b></div>
+        <div class="stat-row"><span>Hãng bay:</span> <b>{{ config['airline'] }}</b></div>
+        <div class="stat-row"><span>Ngưỡng giá báo:</span> <b style="color:var(--emerald)">{{ "{:,}".format(config['threshold']) }} ₫</b></div>
+        <div class="stat-row"><span>Chu kỳ quét:</span> <b>Mỗi {{ config['interval'] }} phút</b></div>
+      </div>
+    </div>
+
+    <!-- LOGS CARD -->
+    <div class="card" style="margin-top: 24px;">
+      <h2>Kết quả quét gần nhất</h2>
+      {% if results %}
+      <table>
+        <tr><th>Hãng</th><th>Giờ bay</th><th>Giá vé</th><th>Thao tác</th></tr>
+        {% for f in results[:5] %}
+        <tr>
+          <td>{{ f['airline_logo'] }} {{ f['airline'] }}</td>
+          <td>{{ f['time_window'] }}</td>
+          <td style="font-weight:700; color:var(--emerald)">{{ "{:,}".format(f['price']) }} ₫</td>
+          <td><a href="{{ f['link'] }}" target="_blank" style="color:#3b82f6; text-decoration:none; font-weight:600;">Đặt ngay</a></td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p style="color:#64748b; font-size:0.9rem;">Chưa có dữ liệu. Hãy bật bot để bắt đầu quét.</p>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>
 """
 
 # ════════════════════════════════════════════════
-# CONTROLLERS / API ROUTES
+# FLASK ROUTES
 # ════════════════════════════════════════════════
+
 @app.route("/")
 def index():
-    return render_template_string(LANDING_HTML, suggestions=TRIP_SUGGESTIONS, hotels=HOTELS, attractions=ATTRACTIONS)
+    return render_template_string(LANDING_HTML, trips=TRIP_SUGGESTIONS, airlines=AIRLINES, hotels=HOTELS)
 
 @app.route("/dashboard")
 def dashboard():
-    if "user" not in session: return redirect(url_for("index"))
-    return render_template_string(DASHBOARD_HTML, config=state["config"], stats=state["stats"], results=state["results"], logs=state["logs"], airlines=AIRLINES, domestic_airports=DOMESTIC_AIRPORTS, international_airports=INTERNATIONAL_AIRPORTS)
+    if "user" not in session:
+        return redirect("/")
+    return render_template_string(DASHBOARD_HTML, session=session, config=state["config"], stats=state["stats"], results=state["results"])
 
 @app.route("/api/auth", methods=["POST"])
-def api_auth():
-    data = request.json or {}
+def auth():
+    data = request.json
     action = data.get("action")
-    u = data.get("username", "").strip()
-    p = data.get("password", "").strip()
-    em = data.get("email", "").strip()
+    user = data.get("username", "").strip()
+    pwd = data.get("password", "").strip()
     
-    if not u or not p: return jsonify({"success":False,"msg":"Vui lòng nhập tài khoản/mật khẩu"})
-    
-    if action == "register":
-        if u in state["users"]: return jsonify({"success":False,"msg":"Tài khoản đã tồn tại"})
-        state["users"][u] = {"password":p,"email":em}
+    if action == "login":
+        if user in state["users"] and state["users"][user]["password"] == pwd:
+            session["user"] = user
+            return jsonify({"status": "ok"})
+        return jsonify({"status": "error", "msg": "Sai tài khoản hoặc mật khẩu!"})
+        
+    elif action == "register":
+        if not user or not pwd:
+            return jsonify({"status": "error", "msg": "Vui lòng nhập đủ thông tin!"})
+        if user in state["users"]:
+            return jsonify({"status": "error", "msg": "Tên đăng nhập đã tồn tại!"})
+            
+        state["users"][user] = {"password": pwd, "email": ""}
         save_data()
-        session["user"] = u
-        add_log(f"Người dùng mới đăng ký: {u}", "info")
-        return jsonify({"success":True})
-    else:
-        if u in state["users"] and state["users"][u]["password"] == p:
-            session["user"] = u
-            return jsonify({"success":True})
-        return jsonify({"success":False,"msg":"Sai tài khoản hoặc mật khẩu"})
+        session["user"] = user
+        return jsonify({"status": "ok"})
+        
+    return jsonify({"status": "error", "msg": "Hành động không hợp lệ"})
+
+@app.route("/api/toggle", methods=["POST"])
+def toggle():
+    if "user" in session:
+        state["config"]["is_active"] = not state["config"]["is_active"]
+        save_data()
+        if state["config"]["is_active"]:
+            # Trigger immediate scan on start
+            threading.Thread(target=execute_scan).start()
+    return redirect("/dashboard")
 
 @app.route("/logout")
 def logout():
     session.pop("user", None)
-    return redirect(url_for("index"))
-
-@app.route("/api/config", methods=["POST"])
-def api_config():
-    if "user" not in session: return redirect(url_for("index"))
-    cfg = state["config"]
-    cfg["route_type"] = request.form.get("route_type","domestic")
-    cfg["origin"] = request.form.get("origin")
-    cfg["destination"] = request.form.get("destination")
-    cfg["fly_date"] = request.form.get("fly_date")
-    cfg["airline"] = request.form.get("airline")
-    cfg["threshold"] = int(request.form.get("threshold", 2000000))
-    cfg["interval"] = int(request.form.get("interval", 15))
-    cfg["is_active"] = "is_active" in request.form
-    save_data()
-    add_log("Cập nhật cấu hình săn vé thành công", "info")
-    return redirect(url_for("dashboard"))
-
-@app.route("/api/scan_now", methods=["POST"])
-def api_scan_now():
-    if "user" not in session: return redirect(url_for("index"))
-    execute_scan(force=True)
-    return redirect(url_for("dashboard"))
+    return redirect("/")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    def background_scanner():
+        while True:
+            try:
+                if state["config"].get("is_active"):
+                    execute_scan()
+            except Exception as e:
+                logger.error(f"Scanner error: {e}")
+            time.sleep(state["config"].get("interval", 15) * 60)
+
+    # Khởi chạy luồng quét ngầm
+    scanner_thread = threading.Thread(target=background_scanner, daemon=True)
+    scanner_thread.start()
+    
+    # Khởi chạy Web Server
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
 ENDOFFILE
