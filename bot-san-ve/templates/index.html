@@ -1,98 +1,115 @@
 <!DOCTYPE html>
-<html lang="vi" id="html-root">
+<html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Flight Hunter Pro — Săn Vé Thông Minh</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{ --emerald:#10b981; --emerald-light:#34d399; --emerald-dark:#059669; --navy:#0a1628; --text:#1e293b; --muted:#64748b;}
-  *{box-sizing:border-box; margin:0; padding:0}
-  body{font-family:'Be Vietnam Pro',sans-serif; color:var(--text); overflow-x:hidden}
-  nav{position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 40px; display:flex; justify-content:space-between; background:rgba(10,22,40,0.95); color:white;}
-  .hero{height:100vh; position:relative; overflow:hidden; display:flex; align-items:center; background:#0a1628; color:white; justify-content:center; text-align:center;}
-  .container{max-width:1200px; margin:0 auto; padding:80px 40px;}
-  .modal-overlay{position:fixed; inset:0; background:rgba(10,22,40,0.85); z-index:1000; display:none; align-items:center; justify-content:center;}
-  .modal-overlay.open{display:flex;}
-  .modal-box{background:white; border-radius:24px; width:100%; max-width:420px; padding:28px;}
-  .btn{background:var(--emerald); color:white; padding:12px 24px; border:none; border-radius:8px; cursor:pointer;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flight Hunter Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* [CSS đã được tối ưu hóa theo thiết kế của bạn] */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root { --green: #10b981; --bg-dark: #0a1e23; --bg-mid: #0f2d35; --bg-page: #f2f4f6; --text-white: #ffffff; --text-muted: #8ba5ac; --input-bg: #f8fafc; --label-color: #94a3b8; }
+        body { background: var(--bg-page); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+        
+        .header { background: linear-gradient(170deg, var(--bg-dark) 0%, var(--bg-mid) 55%, #163d47 100%); color: white; padding: 0 0 56px 0; border-bottom-left-radius: 28px; border-bottom-right-radius: 28px; position: relative; overflow: hidden; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px 0 22px; position: relative; z-index: 2; }
+        .brand { display: flex; align-items: center; gap: 9px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; }
+        .brand-icon { width: 32px; height: 32px; background: var(--green); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+        .brand span { color: var(--green); }
+        .live-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 5px 12px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+        .live-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+        
+        .hero { padding: 28px 22px 0 22px; position: relative; z-index: 2; }
+        .scan-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); border-radius: 20px; padding: 5px 14px; font-size: 0.75rem; font-weight: 700; color: var(--green); margin-bottom: 18px; }
+        .hero-title { font-family: 'Syne', sans-serif; font-size: 2.3rem; font-weight: 800; line-height: 1.1; color: white; margin-bottom: 14px; }
+        .hero-title .accent { color: var(--green); }
+        
+        .stats-float { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 18px; margin-top: -28px; position: relative; z-index: 10; }
+        .stat-card { background: white; border-radius: 18px; padding: 18px 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); text-align: center; }
+        .stat-val { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; color: #111827; line-height: 1; margin-bottom: 4px; }
+        .stat-val.green { color: var(--green); }
+        .stat-lbl { font-size: 0.72rem; color: #9ca3af; }
+        
+        .section-card { background: white; border-radius: 22px; margin: 18px 18px 16px 18px; padding: 22px 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+        .section-head { font-size: 0.8rem; font-weight: 700; color: #374151; text-transform: uppercase; margin-bottom: 20px; }
+        .field-wrap { background: var(--input-bg); border: 1.5px solid #e8ecf0; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; }
+        .field-label { font-size: 0.68rem; font-weight: 700; color: var(--label-color); text-transform: uppercase; margin-bottom: 3px; }
+        select, input { background: transparent; border: none; width: 100%; font-size: 0.92rem; font-weight: 600; outline: none; }
+        .btn-primary { width: 100%; padding: 16px; background: var(--green); color: white; border-radius: 15px; border: none; font-weight: 700; cursor: pointer; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+        .btn-secondary { padding: 12px; background: #f3f4f6; color: #374151; border-radius: 12px; border: 1.5px solid #e5e7eb; cursor: pointer; }
+        .btn-danger { padding: 11px; background: #fff1f2; color: #ef4444; border-radius: 12px; border: 1.5px solid #fecdd3; cursor: pointer; width: 100%; margin-top: 10px; }
+        
+        .flight-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eef1f4; }
+        .flight-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: var(--green); }
+        .book-btn { background: #eff6ff; color: #2563eb; font-size: 0.7rem; font-weight: 700; padding: 5px 11px; border-radius: 8px; text-decoration: none; }
+        
+        .log-box { background: white; border-radius: 18px; padding: 16px; height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.73rem; border: 1px solid #eef1f4; }
+        .log-entry { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid #f3f4f6; }
+    </style>
 </head>
 <body>
-<nav>
-  <h2>FlightHunter</h2>
-  <div>
-    <button class="btn" onclick="openModal('login')">Đăng nhập</button>
-  </div>
-</nav>
 
-<section class="hero">
-  <div>
-    <h1>Săn vé máy bay Rẻ & Nhanh Nhất</h1>
-    <p>Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7.</p>
-    <br>
+<div class="header">
+    <div class="topbar">
+        <div class="brand"><div class="brand-icon">✈</div>Flight <span>Hunter</span></div>
+        <div class="live-pill"><div class="live-dot" id="topLiveDot"></div><span id="topLiveTime">--:--:--</span></div>
+    </div>
+    <div class="hero">
+        <div class="scan-badge">TỰ ĐỘNG QUÉT 24/7</div>
+        <h1 class="hero-title">Săn Vé <span class="accent">Thông Minh</span></h1>
+    </div>
+</div>
+
+<div class="stats-float">
+    <div class="stat-card"><div class="stat-val" id="scanCount">0</div><div class="stat-lbl">Lần quét</div></div>
+    <div class="stat-card"><div class="stat-val green" id="alertCount">0</div><div class="stat-lbl">Cảnh báo</div></div>
+</div>
+
+<div class="section-card">
+    <div class="section-head">🎛 CẤU HÌNH THEO DÕI</div>
+    <div class="field-wrap"><div class="field-label">✈ Điểm đi</div>
+        <select id="origin">{% for ap in airports %}<option value="{{ ap.code }}">{{ ap.name }}</option>{% endfor %}</select>
+    </div>
+    <div class="field-wrap"><div class="field-label">🛬 Điểm đến</div>
+        <select id="destination">{% for ap in airports %}<option value="{{ ap.code }}">{{ ap.name }}</option>{% endfor %}</select>
+    </div>
+    <div class="field-wrap"><div class="field-label">📅 Ngày bay</div><input type="date" id="fly_date"></div>
+    <div class="field-wrap"><div class="field-label">💰 Giá kỳ vọng</div><input type="number" id="threshold"></div>
     
-    <!-- Đoạn SVG đã được sửa lỗi cắt ngang -->
-    <svg width="400" height="200" viewBox="0 0 1400 700">
-      <rect width="1400" height="700" fill="#0a3d62"/>
-      <ellipse cx="700" cy="680" rx="900" ry="120" fill="#1bb38a" opacity="0.8"/>
-      <!-- Boat silhouette Fixed -->
-      <polygon points="650,580 750,580 720,600 680,600" fill="#022c22" opacity="0.9"/>
-      <polygon points="700,520 700,580 740,570" fill="#065f46" opacity="0.8"/>
-    </svg>
+    <button class="btn-primary" onclick="saveConfig()">💾 Lưu & Áp dụng</button>
+    <div class="btn-row">
+        <button class="btn-secondary" onclick="scanNow()">🔄 Quét ngay</button>
+        <button class="btn-secondary" onclick="testTelegram()">✈ Test Telegram</button>
+    </div>
+    <button class="btn-danger" onclick="clearLogs()">🗑 Xóa log</button>
+</div>
 
-  </div>
-</section>
+<div style="margin: 0 18px;">
+    <div class="section-head">🎫 KẾT QUẢ VÉ</div>
+    <div id="results-box"></div>
+</div>
 
-<!-- Modal Auth -->
-<div class="modal-overlay" id="authModal">
-  <div class="modal-box">
-    <h2 style="color:var(--navy); margin-bottom: 20px;">Đăng nhập / Đăng ký</h2>
-    <div id="alert-box" style="color: red; margin-bottom: 10px;"></div>
-    <form id="authForm" onsubmit="handleAuth(event)">
-      <input type="text" id="username" placeholder="Tên đăng nhập" required style="width:100%; padding:10px; margin-bottom:10px;">
-      <input type="password" id="password" placeholder="Mật khẩu" required style="width:100%; padding:10px; margin-bottom:10px;">
-      <button type="button" class="btn" onclick="setMode('login')" style="width:48%">Đăng nhập</button>
-      <button type="button" class="btn" onclick="setMode('register')" style="width:48%; background:#64748b;">Đăng ký</button>
-      <button type="submit" id="submitBtn" style="display:none;"></button>
-    </form>
-    <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; cursor:pointer;">Đóng</button>
-  </div>
+<div style="margin: 14px 18px;">
+    <div class="section-head">📋 NHẬT KÝ HOẠT ĐỘNG</div>
+    <div class="log-box" id="log-box"></div>
 </div>
 
 <script>
-  let currentMode = 'login';
-  function openModal(mode) { 
-    document.getElementById('authModal').classList.add('open'); 
-    setMode(mode);
-  }
-  function closeModal() { document.getElementById('authModal').classList.remove('open'); }
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('submitBtn').click();
-  }
-  
-  async function handleAuth(e) {
-    e.preventDefault();
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    
-    try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: currentMode, username: u, password: p })
-      });
-      const data = await res.json();
-      if (data.status === 'ok') {
-        window.location.href = '/dashboard';
-      } else {
-        document.getElementById('alert-box').innerText = data.msg;
-      }
-    } catch (err) {
-      alert("Lỗi kết nối!");
+    function saveConfig() {
+        let payload = {
+            origin: document.getElementById('origin').value,
+            destination: document.getElementById('destination').value,
+            fly_date: document.getElementById('fly_date').value,
+            threshold: document.getElementById('threshold').value,
+            is_active: true
+        };
+        fetch('/api/config', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) })
+        .then(() => alert('Đã lưu!'));
     }
-  }
+    function scanNow() { fetch('/api/scan-now', {method: 'POST'}); }
+    function testTelegram() { fetch('/api/test-telegram', {method: 'POST'}); }
+    function clearLogs() { fetch('/api/clear-logs', {method: 'POST'}); }
 </script>
 </body>
 </html>
