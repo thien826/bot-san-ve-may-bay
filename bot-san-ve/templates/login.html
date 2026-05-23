@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | Flight Hunter</title>
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background: #0a1e23; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        h2 { text-align: center; color: #111827; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1.5px solid #e5e7eb; border-radius: 12px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .switch { text-align: center; margin-top: 15px; font-size: 0.85rem; color: #6b7280; }
+        .switch a { color: #10b981; text-decoration: none; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 id="title">Đăng nhập</h2>
+        <form id="authForm" method="POST">
+            <input type="text" name="username" placeholder="Tên đăng nhập" required>
+            <input type="password" name="password" placeholder="Mật khẩu" required>
+            <button type="submit" id="submitBtn">Đăng nhập</button>
+        </form>
+        <div class="switch">
+            <span id="text">Chưa có tài khoản? </span><a onclick="toggleMode()" id="link">Đăng ký</a>
+        </div>
+    </div>
+    <script>
+        let isLogin = true;
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('title').innerText = isLogin ? 'Đăng nhập' : 'Đăng ký';
+            document.getElementById('submitBtn').innerText = isLogin ? 'Đăng nhập' : 'Đăng ký';
+            document.getElementById('text').innerText = isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? ';
+            document.getElementById('link').innerText = isLogin ? 'Đăng ký' : 'Đăng nhập';
+            document.getElementById('authForm').action = isLogin ? '/login' : '/register';
+        }
+    </script>
+</body>
+</html>
