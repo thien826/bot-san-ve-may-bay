@@ -1,527 +1,98 @@
-te -->
-              <polygon points="650,580 750,580 720,600 680,600" fill="#022c22" opacity="0.9"/>
-              <polygon points="700,520 700,580 740,570" fill="#065f46" opacity="0.8"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <div class="hero-badge reveal">✨ <span data-vi="Khám phá Việt Nam & Thế Giới" data-en="Discover Vietnam & The World">Khám phá Việt Nam & Thế Giới</span></div>
-        <h1 class="hero-title reveal">
-          <span data-vi="Săn vé máy bay" data-en="Hunt for Flights">Săn vé máy bay</span><br>
-          <span class="em" data-vi="Rẻ & Nhanh Nhất" data-en="Cheapest & Fastest">Rẻ & Nhanh Nhất</span>
-        </h1>
-        <p class="hero-sub reveal" data-vi="Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7. Không còn lo lỡ vé rẻ." data-en="Automated tracking and Telegram price alerts 24/7. Never miss a cheap ticket again.">
-          Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7. Không còn lo lỡ vé rẻ.
-        </p>
-        <div class="hero-btns reveal">
-          <button class="btn-hero-primary" onclick="openModal('register')" data-vi="Bắt đầu săn vé ngay" data-en="Start Hunting Now">Bắt đầu săn vé ngay</button>
-          <a href="#destinations" class="btn-hero-sec" data-vi="Khám phá điểm đến" data-en="Explore Destinations">Khám phá điểm đến</a>
-        </div>
-      </div>
-      <div class="scroll-hint">
-        <span data-vi="CUỘN XUỐNG" data-en="SCROLL DOWN">CUỘN XUỐNG</span>
-        <div class="scroll-line"></div>
-      </div>
-    </section>
-
-    <!-- STATS -->
-    <div class="stats-bar reveal">
-      <div class="stat-item">
-        <div class="stat-num">24/7</div>
-        <div class="stat-desc" data-vi="Hệ thống tự động" data-en="Automated System">Hệ thống tự động</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">50+</div>
-        <div class="stat-desc" data-vi="Điểm đến" data-en="Destinations">Điểm đến</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-desc" data-vi="Miễn phí" data-en="Free to use">Miễn phí</div>
-      </div>
-    </div>
-
-    <!-- DESTINATIONS -->
-    <section id="destinations" class="container">
-      <div class="section-label reveal" data-vi="ĐIỂM ĐẾN HOT" data-en="TOP DESTINATIONS">ĐIỂM ĐẾN HOT</div>
-      <h2 class="section-title reveal" data-vi="Khám phá thế giới cùng Flight Hunter" data-en="Explore the world with Flight Hunter">Khám phá thế giới cùng Flight Hunter</h2>
-      <p class="section-sub reveal" data-vi="Những chặng bay có giá tốt nhất được hệ thống cập nhật liên tục mỗi ngày." data-en="The best flight routes updated continuously by our system every day.">Những chặng bay có giá tốt nhất được hệ thống cập nhật liên tục mỗi ngày.</p>
-      
-      <div class="dest-grid reveal" id="dest-grid-container">
-        <!-- Rendered by JS -->
-      </div>
-    </section>
-
-    <!-- AIRLINES -->
-    <section id="airlines" class="airlines-bg">
-      <div class="container">
-        <div class="section-label reveal" data-vi="ĐỐI TÁC HÀNG KHÔNG" data-en="AIRLINE PARTNERS">ĐỐI TÁC HÀNG KHÔNG</div>
-        <h2 class="section-title reveal" data-vi="Hỗ trợ quét vé mọi hãng bay" data-en="Scan tickets from all airlines">Hỗ trợ quét vé mọi hãng bay</h2>
-        <div class="airline-scroll reveal" id="airline-container">
-          <!-- Rendered by JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="container">
-      <div class="section-label reveal" data-vi="HƯỚNG DẪN" data-en="HOW IT WORKS">HƯỚNG DẪN</div>
-      <h2 class="section-title reveal" data-vi="3 Bước săn vé đơn giản" data-en="3 Simple steps to hunt tickets">3 Bước săn vé đơn giản</h2>
-      
-      <div class="steps-grid reveal">
-        <div class="step-card">
-          <div class="step-num">1</div>
-          <div class="step-icon">🎯</div>
-          <div class="step-title" data-vi="Cài đặt thông số" data-en="Set parameters">Cài đặt thông số</div>
-          <div class="step-desc" data-vi="Đăng nhập vào Dashboard, chọn chặng bay, ngày đi và mức giá kỳ vọng của bạn." data-en="Log into the Dashboard, select your route, date, and expected price.">Đăng nhập vào Dashboard, chọn chặng bay, ngày đi và mức giá kỳ vọng của bạn.</div>
-          <div class="connector">➔</div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">2</div>
-          <div class="step-icon">🤖</div>
-          <div class="step-title" data-vi="Hệ thống tự quét" data-en="System Auto-scans">Hệ thống tự quét</div>
-          <div class="step-desc" data-vi="Bot Flight Hunter sẽ liên tục quét dữ liệu từ các hãng và đại lý mỗi 15 phút." data-en="Flight Hunter Bot will continuously scan data from airlines every 15 minutes.">Bot Flight Hunter sẽ liên tục quét dữ liệu từ các hãng và đại lý mỗi 15 phút.</div>
-          <div class="connector">➔</div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <div class="step-icon">📲</div>
-          <div class="step-title" data-vi="Nhận thông báo" data-en="Get Alerts">Nhận thông báo</div>
-          <div class="step-desc" data-vi="Ngay khi có vé rớt giá xuống mức bạn cài đặt, bot sẽ gửi tin nhắn Telegram lập tức." data-en="As soon as a ticket drops to your price, the bot sends an instant Telegram alert.">Ngay khi có vé rớt giá xuống mức bạn cài đặt, bot sẽ gửi tin nhắn Telegram lập tức.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOTELS -->
-    <section id="hotels" class="container" style="background:var(--gray); border-radius:30px; margin-bottom:80px;">
-      <div class="section-label reveal" data-vi="DỊCH VỤ ĐÍNH KÈM" data-en="ADDITIONAL SERVICES">DỊCH VỤ ĐÍNH KÈM</div>
-      <h2 class="section-title reveal" data-vi="Khách sạn & Khu nghỉ dưỡng" data-en="Hotels & Resorts">Khách sạn & Khu nghỉ dưỡng</h2>
-      <p class="section-sub reveal" data-vi="Hoàn thiện chuyến đi của bạn với những lựa chọn lưu trú đẳng cấp." data-en="Complete your trip with premium accommodation choices.">Hoàn thiện chuyến đi của bạn với những lựa chọn lưu trú đẳng cấp.</p>
-      
-      <div class="hotels-grid reveal" id="hotel-container">
-        <!-- Rendered by JS -->
-      </div>
-    </section>
-
-    <!-- HELP / FAQ -->
-    <section id="help" class="help-bg">
-      <div class="container" style="max-width:800px;">
-        <div class="section-label reveal" data-vi="TRỢ GIÚP" data-en="HELP">TRỢ GIÚP</div>
-        <h2 class="section-title reveal" data-vi="Câu hỏi thường gặp" data-en="Frequently Asked Questions">Câu hỏi thường gặp</h2>
-        
-        <div class="faq-list reveal">
-          <div class="faq-item">
-            <div class="faq-q"><span data-vi="Hệ thống này có miễn phí không?" data-en="Is this system free?">Hệ thống này có miễn phí không?</span><span class="arrow">▼</span></div>
-            <div class="faq-a" data-vi="Có, Flight Hunter Pro hoàn toàn miễn phí cho người dùng cá nhân." data-en="Yes, Flight Hunter Pro is completely free for personal users.">Có, Flight Hunter Pro hoàn toàn miễn phí cho người dùng cá nhân.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q"><span data-vi="Làm sao để liên kết Telegram?" data-en="How to link Telegram?">Làm sao để liên kết Telegram?</span><span class="arrow">▼</span></div>
-            <div class="faq-a" data-vi="Trong Dashboard có mục cấu hình Chat ID. Bạn chỉ cần chat với bot của chúng tôi trên Telegram để lấy ID." data-en="In the Dashboard, there is a Chat ID config. Just chat with our bot on Telegram to get your ID.">Trong Dashboard có mục cấu hình Chat ID. Bạn chỉ cần chat với bot của chúng tôi trên Telegram để lấy ID.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q"><span data-vi="Bot quét vé bao lâu một lần?" data-en="How often does the bot scan?">Bot quét vé bao lâu một lần?</span><span class="arrow">▼</span></div>
-            <div class="faq-a" data-vi="Mặc định là 15 phút một lần để tránh bị chặn bởi các hãng hàng không." data-en="Default is every 15 minutes to avoid being blocked by airlines.">Mặc định là 15 phút một lần để tránh bị chặn bởi các hãng hàng không.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer>
-      <div class="footer-top">
-        <div class="footer-brand">
-          <div class="nav-name">Flight<span>Hunter</span> Pro</div>
-          <p class="footer-tagline" data-vi="Hệ thống săn vé tự động thông minh hàng đầu Việt Nam." data-en="Vietnam's leading smart automated flight hunting system.">Hệ thống săn vé tự động thông minh hàng đầu Việt Nam.</p>
-        </div>
-        <div class="footer-col">
-          <h4 data-vi="Liên kết" data-en="Links">Liên kết</h4>
-          <a href="#destinations" data-vi="Điểm đến" data-en="Destinations">Điểm đến</a>
-          <a href="#airlines" data-vi="Hãng bay" data-en="Airlines">Hãng bay</a>
-          <a href="#hotels" data-vi="Khách sạn" data-en="Hotels">Khách sạn</a>
-        </div>
-        <div class="footer-col">
-          <h4 data-vi="Pháp lý" data-en="Legal">Pháp lý</h4>
-          <a href="#" data-vi="Điều khoản" data-en="Terms">Điều khoản</a>
-          <a href="#" data-vi="Bảo mật" data-en="Privacy">Bảo mật</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <div class="copyright">© 2026 Flight Hunter Pro. All rights reserved.</div>
-        <div class="footer-email">✉ support@flighthunter.pro</div>
-      </div>
-    </footer>
-
-    <!-- MODAL AUTH -->
-    <div class="modal-overlay" id="authModal">
-      <div class="modal-box">
-        <div class="modal-wrap">
-          <button class="modal-close" onclick="closeModal()">✕</button>
-          <div class="modal-header">
-            <div class="modal-logo">✈</div>
-            <div class="modal-title" data-vi="Chào mừng trở lại" data-en="Welcome back">Chào mừng trở lại</div>
-            <div class="modal-sub" data-vi="Đăng nhập để truy cập Dashboard" data-en="Login to access Dashboard">Đăng nhập để truy cập Dashboard</div>
-          </div>
-          <div class="modal-body">
-            <div class="modal-tabs">
-              <button class="modal-tab active" id="tab-login" onclick="switchTab('login')" data-vi="ĐĂNG NHẬP" data-en="LOGIN">ĐĂNG NHẬP</button>
-              <button class="modal-tab" id="tab-register" onclick="switchTab('register')" data-vi="ĐĂNG KÝ" data-en="REGISTER">ĐĂNG KÝ</button>
-            </div>
-            
-            <div id="alert-box" class="modal-alert" style="display:none"></div>
-            
-            <form id="authForm" onsubmit="handleAuth(event)">
-              <div class="field">
-                <label data-vi="TÊN ĐĂNG NHẬP" data-en="USERNAME">TÊN ĐĂNG NHẬP</label>
-                <input type="text" id="username" required placeholder="admin">
-              </div>
-              <div class="field">
-                <label data-vi="MẬT KHẨU" data-en="PASSWORD">MẬT KHẨU</label>
-                <input type="password" id="password" required placeholder="••••••">
-              </div>
-              <button type="submit" class="btn-modal" id="btn-submit" data-vi="VÀO DASHBOARD" data-en="ENTER DASHBOARD">VÀO DASHBOARD</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- JAVASCRIPT -->
-    <script>
-      // DATA FROM FLASK
-      const trips = {{ trips | tojson | safe }};
-      const airlines = {{ airlines | tojson | safe }};
-      const hotels = {{ hotels | tojson | safe }};
-      
-      let currentLang = 'vi';
-      let currentAuthMode = 'login';
-
-      // --- RENDERING ---
-      function renderData() {
-        // Render Trips
-        const destHtml = trips.map((t, i) => `
-          <a href="#" class="dest-card">
-            <div class="dest-img d${(i%6)+1}">
-              ${t.img}
-              <div class="dest-badge">HOT</div>
-            </div>
-            <div class="dest-body">
-              <div class="dest-name">${currentLang === 'vi' ? t.label_vi : t.label_en}</div>
-              <div class="dest-desc">${currentLang === 'vi' ? t.desc_vi : t.desc_en}</div>
-              <div class="dest-price">
-                <div>
-                  <div class="dest-from" data-vi="Chỉ từ" data-en="From">Chỉ từ</div>
-                  <div class="dest-amount">${t.price.toLocaleString('vi-VN')} ₫</div>
-                </div>
-                <button class="dest-book" data-vi="Săn ngay" data-en="Hunt Now">Săn ngay</button>
-              </div>
-            </div>
-          </a>
-        `).join('');
-        document.getElementById('dest-grid-container').innerHTML = destHtml;
-
-        // Render Airlines
-        const airHtml = airlines.slice(1).map(a => `
-          <div class="airline-card">
-            <div class="airline-logo">${a.logo}</div>
-            <div class="airline-name">${currentLang === 'vi' ? a.name_vi : a.name_en}</div>
-          </div>
-        `).join('');
-        document.getElementById('airline-container').innerHTML = airHtml;
-
-        // Render Hotels
-        const hotHtml = hotels.slice(0,4).map((h, i) => `
-          <div class="hotel-card">
-            <div class="hotel-img h${(i%4)+1}">
-              ${h.img}
-              <div class="hotel-stars">${'⭐'.repeat(h.stars)}</div>
-            </div>
-            <div class="hotel-body">
-              <span class="hotel-tag">${currentLang === 'vi' ? h.tag_vi : h.tag_en}</span>
-              <div class="hotel-name">${h.name}</div>
-              <div class="hotel-city">📍 ${currentLang === 'vi' ? h.city_vi : h.city_en}</div>
-              <div class="hotel-price">
-                <div>
-                  <div class="hotel-amount">${h.price.toLocaleString('vi-VN')} ₫</div>
-                  <div class="hotel-per" data-vi="/ đêm" data-en="/ night">/ đêm</div>
-                </div>
-                <button class="btn-book-hotel" data-vi="Chi tiết" data-en="Details">Chi tiết</button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-        document.getElementById('hotel-container').innerHTML = hotHtml;
-        
-        applyLangStrings();
-      }
-
-      // --- LANGUAGE TOGGLE ---
-      function toggleLang() {
-        currentLang = currentLang === 'vi' ? 'en' : 'vi';
-        document.getElementById('lang-btn').innerText = currentLang === 'vi' ? 'EN' : 'VI';
-        renderData();
-      }
-
-      function applyLangStrings() {
-        document.querySelectorAll('[data-vi]').forEach(el => {
-          el.innerText = el.getAttribute(`data-${currentLang}`);
-        });
-      }
-
-      // --- UI INTERACTIONS ---
-      window.addEventListener('scroll', () => {
-        const nav = document.getElementById('main-nav');
-        if (window.scrollY > 50) nav.classList.add('scrolled');
-        else nav.classList.remove('scrolled');
-
-        document.querySelectorAll('.reveal').forEach(el => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight - 50) {
-            el.classList.add('visible');
-          }
-        });
-      });
-
-      // FAQ
-      document.querySelectorAll('.faq-q').forEach(q => {
-        q.addEventListener('click', () => {
-          const item = q.parentElement;
-          item.classList.toggle('open');
-        });
-      });
-
-      // --- MODAL ---
-      function openModal(mode) {
-        document.getElementById('authModal').classList.add('open');
-        switchTab(mode);
-      }
-      function closeModal() {
-        document.getElementById('authModal').classList.remove('open');
-      }
-      function switchTab(mode) {
-        currentAuthMode = mode;
-        document.getElementById('tab-login').classList.toggle('active', mode === 'login');
-        document.getElementById('tab-register').classList.toggle('active', mode === 'register');
-        
-        const btn = document.getElementById('btn-submit');
-        const alertBox = document.getElementById('alert-box');
-        alertBox.style.display = 'none';
-
-        if (mode === 'login') {
-          btn.setAttribute('data-vi', 'VÀO DASHBOARD');
-          btn.setAttribute('data-en', 'ENTER DASHBOARD');
-        } else {
-          btn.setAttribute('data-vi', 'TẠO TÀI KHOẢN');
-          btn.setAttribute('data-en', 'CREATE ACCOUNT');
-        }
-        applyLangStrings();
-      }
-
-      async function handleAuth(e) {
-        e.preventDefault();
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        const alertBox = document.getElementById('alert-box');
-        
-        try {
-          const res = await fetch('/api/auth', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ action: currentAuthMode, username: u, password: p })
-          });
-          const data = await res.json();
-          if (data.status === 'ok') {
-            window.location.href = '/dashboard';
-          } else {
-            alertBox.className = 'modal-alert err';
-            alertBox.innerText = data.msg;
-            alertBox.style.display = 'block';
-          }
-        } catch (err) {
-          alert("Network error!");
-        }
-      }
-
-      // Initialize
-      window.onload = () => {
-        renderData();
-        setTimeout(() => window.dispatchEvent(new Event('scroll')), 100);
-      };
-    </script>
-</body>
-</html>
-"""
-
-DASHBOARD_HTML = r"""
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" id="html-root">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dashboard — Flight Hunter Pro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --emerald: #10b981; --navy: #0a1628; }
-    body { font-family: 'Be Vietnam Pro', sans-serif; background: #f8fafc; margin: 0; color: var(--navy); }
-    .header { background: var(--navy); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-weight: 700; font-size: 1.2rem; display:flex; align-items:center; gap:8px; }
-    .logout { color: #f87171; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-    .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 16px; }
-    .stat-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
-    .stat-val { font-weight: 700; color: var(--emerald); }
-    .btn { display: block; width: 100%; background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center; font-size: 1rem; text-decoration: none;}
-    .btn:hover { opacity: 0.9; }
-    .btn.stop { background: #ef4444; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-    .badge.active { background: #dcfce7; color: #16a34a; }
-    .badge.inactive { background: #fee2e2; color: #dc2626; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
-    th { color: #64748b; font-weight: 600; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flight Hunter Pro — Săn Vé Thông Minh</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --emerald:#10b981; --emerald-light:#34d399; --emerald-dark:#059669; --navy:#0a1628; --text:#1e293b; --muted:#64748b;}
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{font-family:'Be Vietnam Pro',sans-serif; color:var(--text); overflow-x:hidden}
+  nav{position:fixed; top:0; left:0; right:0; z-index:100; padding:16px 40px; display:flex; justify-content:space-between; background:rgba(10,22,40,0.95); color:white;}
+  .hero{height:100vh; position:relative; overflow:hidden; display:flex; align-items:center; background:#0a1628; color:white; justify-content:center; text-align:center;}
+  .container{max-width:1200px; margin:0 auto; padding:80px 40px;}
+  .modal-overlay{position:fixed; inset:0; background:rgba(10,22,40,0.85); z-index:1000; display:none; align-items:center; justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:white; border-radius:24px; width:100%; max-width:420px; padding:28px;}
+  .btn{background:var(--emerald); color:white; padding:12px 24px; border:none; border-radius:8px; cursor:pointer;}
+</style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">✈ FlightHunter Dashboard</div>
-    <a href="/logout" class="logout">Đăng xuất</a>
+<nav>
+  <h2>FlightHunter</h2>
+  <div>
+    <button class="btn" onclick="openModal('login')">Đăng nhập</button>
   </div>
+</nav>
+
+<section class="hero">
+  <div>
+    <h1>Săn vé máy bay Rẻ & Nhanh Nhất</h1>
+    <p>Hệ thống tự động theo dõi và cảnh báo giá vé qua Telegram 24/7.</p>
+    <br>
+    
+    <!-- Đoạn SVG đã được sửa lỗi cắt ngang -->
+    <svg width="400" height="200" viewBox="0 0 1400 700">
+      <rect width="1400" height="700" fill="#0a3d62"/>
+      <ellipse cx="700" cy="680" rx="900" ry="120" fill="#1bb38a" opacity="0.8"/>
+      <!-- Boat silhouette Fixed -->
+      <polygon points="650,580 750,580 720,600 680,600" fill="#022c22" opacity="0.9"/>
+      <polygon points="700,520 700,580 740,570" fill="#065f46" opacity="0.8"/>
+    </svg>
+
+  </div>
+</section>
+
+<!-- Modal Auth -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box">
+    <h2 style="color:var(--navy); margin-bottom: 20px;">Đăng nhập / Đăng ký</h2>
+    <div id="alert-box" style="color: red; margin-bottom: 10px;"></div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <input type="text" id="username" placeholder="Tên đăng nhập" required style="width:100%; padding:10px; margin-bottom:10px;">
+      <input type="password" id="password" placeholder="Mật khẩu" required style="width:100%; padding:10px; margin-bottom:10px;">
+      <button type="button" class="btn" onclick="setMode('login')" style="width:48%">Đăng nhập</button>
+      <button type="button" class="btn" onclick="setMode('register')" style="width:48%; background:#64748b;">Đăng ký</button>
+      <button type="submit" id="submitBtn" style="display:none;"></button>
+    </form>
+    <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; cursor:pointer;">Đóng</button>
+  </div>
+</div>
+
+<script>
+  let currentMode = 'login';
+  function openModal(mode) { 
+    document.getElementById('authModal').classList.add('open'); 
+    setMode(mode);
+  }
+  function closeModal() { document.getElementById('authModal').classList.remove('open'); }
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('submitBtn').click();
+  }
   
-  <div class="container">
-    <div class="grid">
-      <!-- CONTROL CARD -->
-      <div class="card">
-        <h2>Trạng thái Bot</h2>
-        <div class="stat-row">
-          <span>Hoạt động:</span>
-          <span class="badge {{ 'active' if config['is_active'] else 'inactive' }}">{{ 'ĐANG CHẠY' if config['is_active'] else 'ĐÃ DỪNG' }}</span>
-        </div>
-        <div class="stat-row">
-          <span>Số lần quét:</span>
-          <span class="stat-val">{{ stats['scan_count'] }}</span>
-        </div>
-        <div class="stat-row">
-          <span>Lần quét cuối:</span>
-          <span class="stat-val">{{ stats['last_scan'] }}</span>
-        </div>
-        <div class="stat-row">
-          <span>Cảnh báo đã gửi:</span>
-          <span class="stat-val">{{ stats['alert_count'] }}</span>
-        </div>
-        
-        <form method="POST" action="/api/toggle" style="margin-top:20px;">
-          <button type="submit" class="btn {{ 'stop' if config['is_active'] else '' }}">
-            {{ 'DỪNG SĂN VÉ' if config['is_active'] else 'BẬT SĂN VÉ' }}
-          </button>
-        </form>
-      </div>
-
-      <!-- CONFIG CARD -->
-      <div class="card">
-        <h2>Cấu hình săn vé hiện tại</h2>
-        <div class="stat-row"><span>Chặng bay:</span> <b>{{ config['origin'] }} → {{ config['destination'] }}</b></div>
-        <div class="stat-row"><span>Ngày bay:</span> <b>{{ config['fly_date'] }}</b></div>
-        <div class="stat-row"><span>Hãng bay:</span> <b>{{ config['airline'] }}</b></div>
-        <div class="stat-row"><span>Ngưỡng giá báo:</span> <b style="color:var(--emerald)">{{ "{:,}".format(config['threshold']) }} ₫</b></div>
-        <div class="stat-row"><span>Chu kỳ quét:</span> <b>Mỗi {{ config['interval'] }} phút</b></div>
-      </div>
-    </div>
-
-    <!-- LOGS CARD -->
-    <div class="card" style="margin-top: 24px;">
-      <h2>Kết quả quét gần nhất</h2>
-      {% if results %}
-      <table>
-        <tr><th>Hãng</th><th>Giờ bay</th><th>Giá vé</th><th>Thao tác</th></tr>
-        {% for f in results[:5] %}
-        <tr>
-          <td>{{ f['airline_logo'] }} {{ f['airline'] }}</td>
-          <td>{{ f['time_window'] }}</td>
-          <td style="font-weight:700; color:var(--emerald)">{{ "{:,}".format(f['price']) }} ₫</td>
-          <td><a href="{{ f['link'] }}" target="_blank" style="color:#3b82f6; text-decoration:none; font-weight:600;">Đặt ngay</a></td>
-        </tr>
-        {% endfor %}
-      </table>
-      {% else %}
-      <p style="color:#64748b; font-size:0.9rem;">Chưa có dữ liệu. Hãy bật bot để bắt đầu quét.</p>
-      {% endif %}
-    </div>
-  </div>
+  async function handleAuth(e) {
+    e.preventDefault();
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: currentMode, username: u, password: p })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        window.location.href = '/dashboard';
+      } else {
+        document.getElementById('alert-box').innerText = data.msg;
+      }
+    } catch (err) {
+      alert("Lỗi kết nối!");
+    }
+  }
+</script>
 </body>
 </html>
-"""
-
-# ════════════════════════════════════════════════
-# FLASK ROUTES
-# ════════════════════════════════════════════════
-
-@app.route("/")
-def index():
-    return render_template_string(LANDING_HTML, trips=TRIP_SUGGESTIONS, airlines=AIRLINES, hotels=HOTELS)
-
-@app.route("/dashboard")
-def dashboard():
-    if "user" not in session:
-        return redirect("/")
-    return render_template_string(DASHBOARD_HTML, session=session, config=state["config"], stats=state["stats"], results=state["results"])
-
-@app.route("/api/auth", methods=["POST"])
-def auth():
-    data = request.json
-    action = data.get("action")
-    user = data.get("username", "").strip()
-    pwd = data.get("password", "").strip()
-    
-    if action == "login":
-        if user in state["users"] and state["users"][user]["password"] == pwd:
-            session["user"] = user
-            return jsonify({"status": "ok"})
-        return jsonify({"status": "error", "msg": "Sai tài khoản hoặc mật khẩu!"})
-        
-    elif action == "register":
-        if not user or not pwd:
-            return jsonify({"status": "error", "msg": "Vui lòng nhập đủ thông tin!"})
-        if user in state["users"]:
-            return jsonify({"status": "error", "msg": "Tên đăng nhập đã tồn tại!"})
-            
-        state["users"][user] = {"password": pwd, "email": ""}
-        save_data()
-        session["user"] = user
-        return jsonify({"status": "ok"})
-        
-    return jsonify({"status": "error", "msg": "Hành động không hợp lệ"})
-
-@app.route("/api/toggle", methods=["POST"])
-def toggle():
-    if "user" in session:
-        state["config"]["is_active"] = not state["config"]["is_active"]
-        save_data()
-        if state["config"]["is_active"]:
-            # Trigger immediate scan on start
-            threading.Thread(target=execute_scan).start()
-    return redirect("/dashboard")
-
-@app.route("/logout")
-def logout():
-    session.pop("user", None)
-    return redirect("/")
-
-if __name__ == "__main__":
-    def background_scanner():
-        while True:
-            try:
-                if state["config"].get("is_active"):
-                    execute_scan()
-            except Exception as e:
-                logger.error(f"Scanner error: {e}")
-            time.sleep(state["config"].get("interval", 15) * 60)
-
-    # Khởi chạy luồng quét ngầm
-    scanner_thread = threading.Thread(target=background_scanner, daemon=True)
-    scanner_thread.start()
-    
-    # Khởi chạy Web Server
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
-ENDOFFILE
